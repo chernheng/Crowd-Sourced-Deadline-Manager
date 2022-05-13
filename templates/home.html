@@ -1,13 +1,36 @@
 {% extends "layout.html" %}
 {% block content %}
+    {%for module in user_modules%}
 
-    <h1>Artificial Intelligence</h1>
-    <button class="collapsible">Coursework 1</button>
-    <div class="content">
-        <p>25th April 2022</p>
-    </div>
-    <button class="collapsible">Coursework 2</button>
-    <div class="content">
-        <p>26th April 2022</p>
-    </div>
+        <h1>{{module.title}}</h1>
+        <button class="collapsible">Coursework 1</button>
+        <div class="content">
+            <p>25th April 2022</p>
+        </div>
+    {% endfor %}
 {%endblock content%}
+
+{% block mods %}
+    <h3>Subscribed Modules</h3>
+    <ul>
+    {%for module in user_modules%}
+        <li><a href="#"><u>{{module.title}}</u></a></li>
+    {% endfor %}
+    </ul>
+    <h3>Available Modules</h3>
+    <div class="dropdown">
+        <button class="dropbtn">Subscribe Here</button>
+        <div class="dropdown-content">
+        {%for avail in avail_modules%}
+                <a href="/embedded">{{avail.title}}</a>
+        {%endfor%}
+        </div>
+    </div>
+{%endblock mods%}
+
+<!-- <h3>Subscribed Modules</h3>
+<ul>
+    <li><a href="#"><u>Artificial Intelligence</u></a></li>
+    <li><a href="#"><u>Machine Learning</u></a></li>
+    <li><a href="#"><u>Control Engineering</u></a></li>
+</ul> -->
