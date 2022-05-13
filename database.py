@@ -1,4 +1,4 @@
-from deadline import db, Student, Module
+from flaskdeadline.models import db, Student, Module
 
 db.drop_all()
 db.create_all()
