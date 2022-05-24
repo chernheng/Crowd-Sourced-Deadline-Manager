@@ -1,11 +1,13 @@
 {% extends "layout.html" %}
 {% block content %}
-    {%for module in user_modules%}
 
-        <h1>{{module.title}}</h1>
-        <button class="collapsible">Coursework 1</button>
+    {%for key in user_modules%}
+        <h1>{{key.split("/")[0]}}</h1>
+        <button class="collapsible">{{key.split("/")[1]}}</button>
         <div class="content">
-            <p>25th April 2022</p>
+            {%for element in user_modules[key] %}
+                <p>{{element[0]}}, {{element[1]}} people voted for this</p>
+            {% endfor %}
         </div>
     {% endfor %}
 {%endblock content%}
@@ -13,7 +15,7 @@
 {% block mods %}
     <h3>Subscribed Modules</h3>
     <ul>
-    {%for module in user_modules%}
+    {%for module in taking%}
         <li><a href="#"><u>{{module.title}}</u></a></li>
     {% endfor %}
     </ul>
@@ -22,7 +24,7 @@
         <button class="dropbtn">Subscribe Here</button>
         <div class="dropdown-content">
         {%for avail in avail_modules%}
-                <a href="/embedded">{{avail.title}}</a>
+                <a href="/subscribe/{{avail.id}}" +>{{avail.title}}</a>
         {%endfor%}
         </div>
     </div>
