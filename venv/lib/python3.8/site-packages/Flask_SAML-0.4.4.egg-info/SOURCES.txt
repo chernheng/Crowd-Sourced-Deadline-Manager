@@ -1,0 +1,11 @@
+MANIFEST.in
+README.md
+flask_saml.py
+setup.cfg
+setup.py
+Flask_SAML.egg-info/PKG-INFO
+Flask_SAML.egg-info/SOURCES.txt
+Flask_SAML.egg-info/dependency_links.txt
+Flask_SAML.egg-info/not-zip-safe
+Flask_SAML.egg-info/requires.txt
+Flask_SAML.egg-info/top_level.txt

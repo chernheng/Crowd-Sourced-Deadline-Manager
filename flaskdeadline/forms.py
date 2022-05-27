@@ -1,6 +1,6 @@
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, DateTimeField
 from wtforms.validators import DataRequired, Length, Email, EqualTo
 
 
@@ -21,3 +21,11 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
+
+
+class ModuleForm(FlaskForm):
+    id = StringField('Module Code', validators=[DataRequired(), Length(9)])
+    title = StringField('Name of Module', validators=[DataRequired()])
+    coursework_title = StringField('Name of Coursework', description = 'Coursework 1', validators=[DataRequired()])
+    date = DateTimeField('Deadline of Coursework',format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
+    submit = SubmitField('Add Module')

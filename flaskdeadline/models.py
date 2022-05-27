@@ -32,7 +32,7 @@ class Deadline(db.Model):
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
-    stream = db.Column(db.String(3), unique=True, nullable=False)
+    stream = db.Column(db.String(3), nullable=False)
     module_taken = db.relationship('Module',secondary = take, backref='student_taking')
 
     def __repr__(self):

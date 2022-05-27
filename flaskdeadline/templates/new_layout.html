@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
+    <!-- <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-    <meta name="generator" content="Hugo 0.98.0">
-    <title>Dashboard Template · Bootstrap v5.2</title>
+    <meta name="generator" content="Hugo 0.98.0"> -->
+    <title>EEE Deadline Tool</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.2/examples/dashboard/">
 
@@ -67,12 +67,16 @@
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
       }
+      .nav-link {
+      display: inline-block !important;
+  
+      }
 
       .collapsible {
         background-color: #777;
         color: white;
         cursor: pointer;
-        padding: 18px;
+        padding: 10px;
         width: 100%;
         border: none;
         text-align: left;
@@ -140,38 +144,32 @@
     
     <!-- Custom styles for this template -->
     <link href="{{ url_for('static', filename='dashboard.css') }}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
   </head>
   <body>
     
-<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">EEE Deadline Tool</a>
+<header class="navbar navbar-dark sticky-top bg-primary flex-md  p-0 shadow">
+  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="{{url_for('home')}}">EEE Deadline Tool</a>
   <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
     <div class="navbar-nav">
         <div class="nav-item text-nowrap">
           <a class="nav-link px-3" href="{{url_for('login')}}">Login</a>
+          <a class="nav-link px-3" href="{{url_for('register')}}">Register</a>
         </div>
   </div>
 </header>
 
 <div class="container-fluid">
   <div class="row">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                <p> {{ message }}</p>
-            </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
     {%block mods%} {%endblock%}
 
     <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <!-- <h1 class="h2">Deadlines</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-3 border-bottom">
+        <p>Deadlines are shown below</p>
+        <!-- <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group me-2">
             <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
             <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
@@ -182,8 +180,16 @@
           </button>
         </div> -->
       </div>
-
-
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+              <p> {{ message }}</p>
+          </div>
+          {% endfor %}
+          {% endif %}
+      {% endwith %}
+    
       {%block content%} {%endblock%}
 
       <script>
@@ -207,7 +213,10 @@
 </div>
 
 
+
     <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
 
       <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js" integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js" integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha" crossorigin="anonymous"></script><script src="{{ url_for('static', filename='dashboard.js') }}"></script>
   </body>
