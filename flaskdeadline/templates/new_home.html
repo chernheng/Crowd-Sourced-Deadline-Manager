@@ -1,29 +1,52 @@
 {% extends "new_layout.html" %}
 {% block content %}
 
-    {%for key in user_modules%}
-        <h3>{{key.split("/")[0]}}</h3>
-        <button class="collapsible">{{key.split("/")[1]}}</button>
+    {%for title in user_modules%}
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2">
+            <h3>{{title}}</h3>
+            <div class="btn-toolbar px-4 mb-2 mb-md-0">
+                <div class="btn-group ml-2">
+                <a type="button" class="btn btn-sm btn-outline-secondary" href="/deadline/new/{{title}}">Add new deadline</a>
+                <a type="button" class="btn btn-sm btn-outline-secondary" href="/edit/{{title}}">Edit Module Details</a>
+                </div>
+            </div>
+            </div>
+        {%for cw in user_modules[title]%}
+        <button class="collapsible">{{cw}}</button>
         <div class="content">
-            {%for element in user_modules[key] %}
+            {%for element in user_modules[title][cw] %}
             <h6>
                 {%if element[2]%}
                 <a class="nav-link active" aria-current="page" href="#">
-                  {{element[0].strftime('%d %b, %Y')}},   {{element[1]}} has voted for this deadline
+                  {{element[0].strftime('%d %b, %Y, Time: %H:%M')}}, &nbsp&nbsp {{element[1]}} voted for this deadline
                   <span data-feather="thumbs-up" class="align-text-bottom mb-1 mt-1"></span>
                 </a>
                 <span class="nav-link after" >You picked this</span>
                 {% else %}
-                <a class="nav-link" aria-current="page" href="/{{key.split("/")[0]}}/{{element[0]}}">
-                    {{element[0].strftime('%d %b, %Y')}},   {{element[1]}} has voted for this deadline
+                <a class="nav-link" aria-current="page" href="/{{title}}/{{element[0]}}">
+                    {{element[0].strftime('%d %b, %Y, Time: %H:%M')}},   &nbsp&nbsp {{element[1]}} has voted for this deadline
                     <span data-feather="thumbs-up" class="align-text-bottom mb-1 mt-1"></span>
                   </a>
                 {% endif %}
             </h6>
             {% endfor %}
         </div>
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase"></h6>
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-1 mt-1 mb-1 text-muted text-uppercase"></h6>
+        {%endfor%}
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-2 mt-2 mb-2 text-muted text-uppercase"></h6>
     {% endfor %}
+    {%for mod in no_deadline%}
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-left pt-3 pb-2">
+        <h5>{{mod.title}}</h5>
+        <div class="btn-toolbar px-4 mb-2 mb-md-0">
+          <div class="btn-group ml-2">
+            <a type="button" class="btn btn-sm btn-outline-secondary" href="/deadline/new/{{mod.title}}">Add new deadline</a>
+            <a type="button" class="btn btn-sm btn-outline-secondary" href="/edit/{{mod.title}}">Edit Module Details</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+
 {%endblock content%}
 
 
@@ -34,7 +57,7 @@
             <li class="nav-item">
                 <a class="nav-link">
                     <span data-feather="users" class="align-text-bottom"></span>
-                    Andy
+                    {{user.name}}
                 </a>
             </li>
             <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
@@ -58,7 +81,7 @@
                     <li class="nav-item">
                         <a class="nav-link" aria-current="page" href="/subscribed/{{avail.id}}">
                         <span data-feather="book" class="align-text-bottom"></span>
-                            {{avail.title}}
+                        {{avail.id}} - {{avail.title}}
                         </a>
                     </li>
                 {%endfor%}

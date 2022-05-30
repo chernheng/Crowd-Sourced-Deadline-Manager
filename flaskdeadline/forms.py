@@ -29,3 +29,15 @@ class ModuleForm(FlaskForm):
     coursework_title = StringField('Name of Coursework', description = 'Coursework 1', validators=[DataRequired()])
     date = DateTimeField('Deadline of Coursework',format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
     submit = SubmitField('Add Module')
+
+class DeadlineForm(FlaskForm):
+    id = StringField('Module Code', render_kw={'readonly': True})
+    title = StringField('Name of Module', render_kw={'readonly': True})
+    coursework_title = StringField('Name of Coursework', description = 'Coursework 1', validators=[DataRequired()])
+    date = DateTimeField('Deadline of Coursework',format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
+    submit = SubmitField('Add Module')
+
+class EditForm(FlaskForm):
+    id = StringField('Module ID', validators=[DataRequired(), Length(9)])
+    title = StringField('Name of Module', validators=[DataRequired()])
+    submit = SubmitField('Edit Module')

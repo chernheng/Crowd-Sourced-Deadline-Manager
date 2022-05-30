@@ -1,0 +1,55 @@
+{% extends "new_layout.html" %}
+{% block content %}
+<main role="main" class="container">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="content-section">
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                <fieldset class="form-group">
+                    <legend class="border-bottom mb-4">New Deadline</legend>
+                    <div class="form-group mb-4">
+                        {{ form.id.label(class="form-control-label") }}
+                        {{ form.id(class="form-control form-control-lg", value = mod.id) }}
+                    </div>
+                    <div class="form-group mb-4">
+                        {{ form.title.label(class="form-control-label") }}
+                        {{ form.title(class="form-control form-control-lg" ,value = mod.title) }}
+                    </div>
+                    <div class="form-group mb-4">
+                        {{ form.coursework_title.label(class="form-control-label") }}
+                        {% if form.coursework_title.errors %}
+                            {{ form.coursework_title(class="form-control form-control-lg is-invalid" ,placeholder = "Coursework 1") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.coursework_title.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.coursework_title(class="form-control form-control-lg",placeholder = "Coursework 1") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group mb-4">
+                        {{ form.date.label(class="form-control-label") }}
+                        {% if form.date.errors %}
+                            {{ form.date(class="form-control form-control-lg is-invalid",type="datetime-local") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.date.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.date(class="form-control form-control-lg",type="datetime-local") }}
+                        {% endif %}
+                        
+                    </div>
+                </fieldset>
+                <div class="form-group mb-4">
+                    {{ form.submit(class="btn btn-outline-info") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</main>
+{% endblock content %}

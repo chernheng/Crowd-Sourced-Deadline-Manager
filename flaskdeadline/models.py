@@ -26,7 +26,7 @@ class Deadline(db.Model):
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"Deadline('{self.student_id}', '{self.lecturer_id}', '{self.module}', '{self.coursework_id}', '{self.date}')"
+        return f"Deadline('{self.student_id}', '{self.lecturer_id}', '{self.module}', '{self.module_id}','{self.coursework_id}', '{self.date}')"
 
 
 class Student(db.Model):
