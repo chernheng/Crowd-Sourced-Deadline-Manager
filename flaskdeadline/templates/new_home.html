@@ -1,4 +1,22 @@
 {% extends "new_layout.html" %}
+{%block header%}
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-3 border-bottom">
+        <p>Deadlines are shown below</p>
+        <!-- <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
+            <span data-feather="calendar" class="align-text-bottom"></span>
+            This week
+          </button>
+        </div> -->
+      </div>
+
+
+{%endblock header%}
+
 {% block content %}
 
     {%for title in user_modules%}
@@ -13,23 +31,34 @@
             </div>
         {%for cw in user_modules[title]%}
         <button class="collapsible">{{cw}}</button>
-        <div class="content">
+        <div class="content container">
+            <div class = "row">
+            <div class = "col-sm article-content">
             {%for element in user_modules[title][cw] %}
             <h6>
                 {%if element[2]%}
                 <a class="nav-link active" aria-current="page" href="#">
-                  {{element[0].strftime('%d %b, %Y, Time: %H:%M')}}, &nbsp&nbsp {{element[1]}} voted for this deadline
+                  {{element[0].strftime('%d %b, %Y / Time: %H:%M')}} &nbsp&nbsp <u>{{element[1]}}</u> votes
                   <span data-feather="thumbs-up" class="align-text-bottom mb-1 mt-1"></span>
                 </a>
                 <span class="nav-link after" >You picked this</span>
                 {% else %}
                 <a class="nav-link" aria-current="page" href="/{{title}}/{{element[0]}}">
-                    {{element[0].strftime('%d %b, %Y, Time: %H:%M')}},   &nbsp&nbsp {{element[1]}} has voted for this deadline
+                    {{element[0].strftime('%d %b, %Y, Time: %H:%M')}}   &nbsp&nbsp <u>{{element[1]}}</u> votes
                     <span data-feather="thumbs-up" class="align-text-bottom mb-1 mt-1"></span>
                   </a>
                 {% endif %}
             </h6>
             {% endfor %}
+            </div>
+            {%for module in taking%}
+                {%if module.title == title%}
+            <div class = "col-lg d-flex mb-1 mt-1">
+                <h6><u>Details of Module:</u><br> {{module.content}}</h6>
+            </div>
+                {%endif%}
+            {%endfor%}
+        </div>
         </div>
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-1 mt-1 mb-1 text-muted text-uppercase"></h6>
         {%endfor%}
