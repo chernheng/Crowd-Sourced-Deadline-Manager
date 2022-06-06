@@ -1,10 +1,11 @@
 
 from gettext import npgettext
 from sqlite3 import Date
+from xml.sax.xmlreader import AttributesImpl
 from flask import render_template, url_for, flash, redirect, request, session, make_response
 from flaskdeadline import app, db
 from markupsafe import escape
-from flaskdeadline.models import Student, Module, Lecturer, Deadline
+from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework
 from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm
 from sqlalchemy import update, func
 from datetime import datetime
@@ -61,21 +62,44 @@ def index1():
     mod = Module.query.filter_by(id='ELEC60006').first()
     user.module_responsible.append(mod)
     db.session.commit()
-    mods = Deadline.query.all()
+    total_hours = db.session.query(func.avg(Coursework.hours).label('average')).filter_by(id="Coursework 1",module_id="ELEC60006").all()
     print(user.module_responsible)
-    print(mod.module_vote)
+    print(total_hours[0][0])
     if mod:
         print("yes")
     else:
         print("no")
     return render_template("index1.html")
 
-@app.route('/<string:module>/<string:date>')
-def change_deadline(module,date):
+@app.route('/<string:module>/<string:cw>/<string:date>/up')
+def upvote_deadline(module,cw,date):
     user = Student.query.filter_by(stream='EIE').first()
     mod = Module.query.filter_by(title=module).first()
-    to_change = Deadline.query.filter_by(student=user,module=mod).first()
-    to_change.date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+    to_change = Deadline.query.filter_by(student=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
+    if to_change:
+        if to_change.vote == "Up":
+            to_change.vote = "Neutral"
+        else:
+            to_change.vote="Up"
+    else:
+        insert = Deadline(student_id = user.id, module_id=mod.id,coursework_id=cw,date=datetime.strptime(date, '%Y-%m-%d %H:%M:%S'),vote="Up")
+        db.session.add(insert)
+    db.session.commit()
+    return redirect(url_for('home'))
+
+@app.route('/<string:module>/<string:cw>/<string:date>/down')
+def downvote_deadline(module,cw,date):
+    user = Student.query.filter_by(stream='EIE').first()
+    mod = Module.query.filter_by(title=module).first()
+    to_change = Deadline.query.filter_by(student=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
+    if to_change:
+        if to_change.vote == "Down":
+            to_change.vote = "Neutral"
+        else:
+            to_change.vote = "Down"
+    else:
+        insert = Deadline(student_id = user.id, lecturer_id='',module_id=mod.id,coursework_id=cw,date=datetime.strptime(date, '%Y-%m-%d %H:%M:%S'),vote="Down")
+        db.session.add(insert)
     db.session.commit()
     return redirect(url_for('home'))
 
@@ -278,6 +302,7 @@ def staff():
     return render_template("staff.html", teacher_deadlines=teacher_mod, avail_modules = avail, taking = teacher.module_responsible, user=teacher, all_else=all_else_mod, staff=True)
 
 
+
 @app.route('/home')
 def home():
     avail = Module.query.all()
@@ -300,8 +325,9 @@ def home():
     # Deadlines that student voted for
     deadlines_voted = Deadline.query.filter_by(student=user).all()
     print(deadlines_voted)
+
     # All deadlines subscribed by student
-    all_deadlines_subscribed = (db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date, func.count(Deadline.lecturer_id).label("# people"))
+    all_deadlines_subscribed = (db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date,func.count(Deadline.vote).filter(Deadline.vote=="Up"),func.count(Deadline.vote).filter(Deadline.vote=="Down"),func.count(Deadline.vote).label("# people"))
     .group_by(Deadline.coursework_id,Deadline.module_id,Deadline.date)
      ).filter(Deadline.module_id.in_(check)).all()
     print(all_deadlines_subscribed)
@@ -309,20 +335,39 @@ def home():
     for element in all_deadlines_subscribed:
         mod = Module.query.filter_by(id=element[1]).first()
         modname = mod.title
-        voted = False
+        lect = mod.lecturer_responsible
+        if lect:
+            lect_deadline = Deadline.query.filter_by(lecturer_id=lect.id).all()
+        else:
+            lect_deadline = None
+        data = [0] #[Did user vote, Did Lect vote, Is majority?]
         for vote in deadlines_voted:
             if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
-                voted = True
+                if vote.vote == "Up":
+                    data[0] = 1
+                elif vote.vote == "Down":
+                    data[0] = 2
+        if lect_deadline:
+            if lect_deadline.vote =="Up" and lect_deadline.date==element[2]:
+                data.append(True)
+            else:
+                data.append(False)
+        else:
+            data.append(False)
+        if element[3] > element[5]/2:
+            data.append(True)
+        else:
+            data.append(False)
         if modname in t:
             temp = t[modname]
             if element[0] in t[modname]:
                 temp = t[modname][element[0]]
-                temp.append([element[2],element[3],voted])
-                t[modname][element[0]] = sorted(temp, key = lambda x: x[1], reverse=True)
+                temp.append([element[2],element[3],element[4],data])
+                t[modname][element[0]] = temp
             else:
-                t[modname][element[0]] = [[element[2],element[3],voted]]
+                t[modname][element[0]] = [[element[2],element[3],element[4],data]]
         else:
-            t[modname] = {element[0]:[[element[2],element[3],voted]]}
+            t[modname] = {element[0]:[[element[2],element[3],element[4],data]]}
     
     print(t)
     # print(unique)
@@ -337,7 +382,6 @@ def home():
     # print(modules.student_taking)
 
     return render_template("new_home.html", user_modules=t, avail_modules = avail, taking = user.module_taken, user=user, no_deadline=no_deadline_mod)
-
 
 
 
@@ -439,6 +483,7 @@ def index():
         paint_logout = True
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
+            print(attributes)
 
     return render_template(
         'index.html',

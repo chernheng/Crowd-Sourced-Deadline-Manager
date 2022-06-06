@@ -1,4 +1,4 @@
-from flaskdeadline.models import db, Student, Module, Lecturer,Deadline
+from flaskdeadline.models import db, Student, Module, Lecturer,Deadline, Coursework
 import datetime
 from dateutil.tz import gettz
 
@@ -20,9 +20,13 @@ lecturer_1 = Lecturer(id = '0425567', name ='Jeremy Pitt')
 lecturer_2 = Lecturer(id = '0425568', name ='Edward Stott')
 lecturer_3 = Lecturer(id = '0425569', name ='Javier Barria')
 timezone_variable = gettz("Europe/London") 
-deadline_1 = Deadline(coursework_id = 'Coursework 1', student_id = '01566453', module_id ='ELEC60005',lecturer_id = '', date = datetime.datetime(2022, 5, 17,12,0,0,0,timezone_variable))
-deadline_2 = Deadline(coursework_id = 'Coursework 1', student_id = '01566454', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 5, 19,12,0,0,0,timezone_variable))
-deadline_3 = Deadline(coursework_id = 'Coursework 1', student_id = '01566453', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 5, 18,12,0,0,0,timezone_variable))
-deadline_4 = Deadline(coursework_id = 'Coursework 1', student_id = '', module_id ='ELEC60006',lecturer_id = '0425569', date = datetime.datetime(2022, 5, 18,12,0,0,0,timezone_variable))
-db.session.add_all([student_1,student_2,student_3,module_1,module_2, module_3,module_4,module_5, module_6,module_7,module_8, module_9,lecturer_1, lecturer_2,lecturer_3,deadline_1,deadline_2,deadline_3,deadline_4])
+deadline_1 = Deadline(coursework_id = 'Coursework 1', student_id = '01566453', module_id ='ELEC60005',lecturer_id = '', date = datetime.datetime(2022, 5, 17,12,0,0,0,timezone_variable), vote="Up")
+deadline_2 = Deadline(coursework_id = 'Coursework 1', student_id = '01566454', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 5, 19,12,0,0,0,timezone_variable),vote="Up")
+deadline_3 = Deadline(coursework_id = 'Coursework 1', student_id = '01566453', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 5, 18,12,0,0,0,timezone_variable),vote="Up")
+deadline_4 = Deadline(coursework_id = 'Coursework 1', student_id = '', module_id ='ELEC60006',lecturer_id = '0425569', date = datetime.datetime(2022, 5, 18,12,0,0,0,timezone_variable),vote="Up")
+deadline_5 = Deadline(coursework_id = 'Coursework 1', student_id = '01566453', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 5, 19,12,0,0,0,timezone_variable),vote="Down")
+hour1 = Coursework(module_id="ELEC60006", student_id="01566453",id="Coursework 1", hours="4")
+hour2 = Coursework(module_id="ELEC60006", student_id="01566454",id="Coursework 1", hours="3")
+hour3 = Coursework(module_id="ELEC60006", student_id="01566454",id="Coursework 2", hours="10")
+db.session.add_all([student_1,student_2,student_3,module_1,module_2, module_3,module_4,module_5, module_6,module_7,module_8, module_9,lecturer_1, lecturer_2,lecturer_3,deadline_1,deadline_2,deadline_3,deadline_4, deadline_5,hour1,hour2,hour3])
 db.session.commit()

@@ -1,7 +1,7 @@
 {% extends "new_layout.html" %}
 {%block header%}
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-3 border-bottom">
-        <p>Deadlines are shown below under each module. Click the Thumbs Up button to vote for a particular deadline you believe is correct and Thumbs Down the ones that you know are wrong. </p>
+        <p>Deadlines are shown below</p>
         <!-- <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group me-2">
             <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
@@ -40,17 +40,17 @@
                     {{element[1]}}
                     <a class="bi bi-hand-thumbs-up-fill align-text-bottom" style="font-size: 1.1rem; color: green;" href="/{{title}}/{{cw}}/{{element[0]}}/up"></a>
                     {{element[2]}}
-                    <a class="bi bi-hand-thumbs-down align-text-bottom" style="font-size: 1.1rem; color: red;" href="/{{title}}/{{cw}}/{{element[0]}}/down"></a>
+                    <a class="bi bi-hand-thumbs-down align-text-bottom" style="font-size: 1.1rem; color: red;" href="#"></a>
                 {% elif element[3][0] == 2%}
                     {{element[1]}}
                     <a class="bi bi-hand-thumbs-up align-text-bottom" style="font-size: 1.1rem; color: green;" href="/{{title}}/{{cw}}/{{element[0]}}/up"></a>
                     {{element[2]}}
-                    <a class="bi bi-hand-thumbs-down-fill align-text-bottom" style="font-size: 1.1rem; color: red;" href="/{{title}}/{{cw}}/{{element[0]}}/down"></a>
+                    <a class="bi bi-hand-thumbs-down-fill align-text-bottom" style="font-size: 1.1rem; color: red;" href="#"></a>
                 {%else%}
                     {{element[1]}}
                     <a class="bi bi-hand-thumbs-up align-text-bottom" style="font-size: 1.1rem; color: green;" href="/{{title}}/{{cw}}/{{element[0]}}/up"></a>
                     {{element[2]}}
-                    <a class="bi bi-hand-thumbs-down align-text-bottom" style="font-size: 1.1rem; color: red;" href="/{{title}}/{{cw}}/{{element[0]}}/down"></a>
+                    <a class="bi bi-hand-thumbs-down align-text-bottom" style="font-size: 1.1rem; color: red;" href="#"></a>
                 {% endif %}
                 <p class="nav-link mb-1 mt-1">
                   {{element[0].strftime('%d %b, %Y / Time: %H:%M')}} &nbsp&nbsp (

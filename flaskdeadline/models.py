@@ -18,12 +18,12 @@ class Deadline(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=True, primary_key=True)
     lecturer_id = db.Column(db.Integer, db.ForeignKey("lecturer.id"), nullable=True, primary_key=True)
     module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False, primary_key=True)
-    __table_args__ = (db.UniqueConstraint(coursework_id, student_id, lecturer_id, module_id),)
+    date = db.Column(db.DateTime, nullable=False,primary_key=True, default=datetime.utcnow)
+    __table_args__ = (db.UniqueConstraint(coursework_id, student_id, lecturer_id, module_id, date),)
 
     student = db.relationship("Student", backref="student_vote")
     module = db.relationship("Module", backref="module_vote")
-
-    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    vote = db.Column(db.String(10), nullable=False)
 
     def __repr__(self):
         return f"Deadline('{self.student_id}', '{self.lecturer_id}', '{self.module}', '{self.module_id}','{self.coursework_id}', '{self.date}')"
@@ -46,6 +46,16 @@ class Module(db.Model):
 
     def __repr__(self):
         return f"Modules('{self.title}', '{self.id}')"
+
+class Coursework(db.Model):
+    id = db.Column(db.String(100), primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=False, primary_key=True)
+    module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False, primary_key=True)
+    hours = db.Column(db.Integer, nullable=False)
+    __table_args__ = (db.UniqueConstraint(id, student_id, module_id),)
+
+    def __repr__(self):
+        return f"Coursework('{self.module_id}', '{self.id}', '{self.student_id}', '{self.hours}')"
 
 class Lecturer(db.Model):
     id = db.Column(db.Integer, primary_key=True)

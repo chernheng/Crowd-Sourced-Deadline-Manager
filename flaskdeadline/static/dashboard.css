@@ -43,6 +43,7 @@ body {
 
 .sidebar .nav-link {
   font-weight: 500;
+  padding: .4rem .4rem;
   color: rgb(168, 35, 35);
 }
 
@@ -91,6 +92,10 @@ body {
 .nav-link.after {
   color: rgb(26, 96, 162);
 }
+
+/* .nav-link .feather {
+  color: rgb(26, 162, 114);
+} */
 
 .form-control-dark {
   color: #fff;
