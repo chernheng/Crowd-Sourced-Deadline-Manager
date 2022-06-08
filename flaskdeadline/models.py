@@ -47,6 +47,8 @@ class Module(db.Model):
     def __repr__(self):
         return f"Modules('{self.title}', '{self.id}')"
 
+
+# To calculate number of hours
 class Coursework(db.Model):
     id = db.Column(db.String(100), primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=False, primary_key=True)

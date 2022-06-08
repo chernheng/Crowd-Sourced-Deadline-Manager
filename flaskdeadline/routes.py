@@ -4,14 +4,12 @@ from sqlite3 import Date
 from xml.sax.xmlreader import AttributesImpl
 from flask import render_template, url_for, flash, redirect, request, session, make_response
 from flaskdeadline import app, db
-from markupsafe import escape
 from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework
 from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm
 from sqlalchemy import update, func
 from datetime import datetime
 from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
 from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
-
 
 
 @app.route("/test")
@@ -103,23 +101,10 @@ def downvote_deadline(module,cw,date):
     db.session.commit()
     return redirect(url_for('home'))
 
-# @app.route('/subscribe/<string:module_id>')
-# def subscribe(module_id):
-#     user = Student.query.filter_by(stream='EIE').first()
-#     adding = Module.query.filter_by(id=module_id).first()
-#     print(user.module_taken)
-#     if adding in user.module_taken:
-#         user.module_taken.remove(adding)
-#     else:
-#         user.module_taken.append(adding)
-#     db.session.commit()
-#     return redirect(url_for('test'))
-
 @app.route('/subscribed/<string:module_id>')
 def subscribed(module_id):
     user = Student.query.filter_by(stream='EIE').first()
     adding = Module.query.filter_by(id=module_id).first()
-    print(user.module_taken)
     if adding in user.module_taken:
         user.module_taken.remove(adding)
     else:
@@ -135,16 +120,16 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
-@app.route("/login", methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        if form.email.data == 'admin@blog.com' and form.password.data == 'password':
-            flash('Login Successful', 'success')
-            return redirect(url_for('home'))
-        else:
-            flash('Login Unsuccessful. Please check username and password', 'danger')
-    return render_template('login.html', form=form)
+# @app.route("/login", methods=['GET', 'POST'])
+# def login():
+#     form = LoginForm()
+#     if form.validate_on_submit():
+#         if form.email.data == 'admin@blog.com' and form.password.data == 'password':
+#             flash('Login Successful', 'success')
+#             return redirect(url_for('home'))
+#         else:
+#             flash('Login Unsuccessful. Please check username and password', 'danger')
+#     return render_template('login.html', form=form)
 
 @app.route("/module/new", methods=['GET', 'POST'])
 def new_mod():
@@ -157,7 +142,7 @@ def new_mod():
             flash('Module already exists', 'danger')
         else:
             module = Module(id = form.id.data, title = form.title.data)
-            deadline = Deadline(coursework_id = form.coursework_title.data, student_id = user.id, module_id =form.id.data,lecturer_id = '', date = form.date.data)
+            deadline = Deadline(coursework_id = form.coursework_title.data, student_id = user.id, module_id =form.id.data,lecturer_id = '', date = form.date.data, vote = "Up")
             db.session.add(module)
             db.session.add(deadline)
             user.module_taken.append(module)
@@ -171,12 +156,17 @@ def new_deadline(module_title):
     mod = Module.query.filter_by(title=module_title).first()
     user = Student.query.filter_by(stream='EIE').first()
     if form.validate_on_submit():
-        check_deadline = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,student_id=user.id).first()
+        # 2 checks: 1. User votes up on another deadline / 2. Deadline already exist and user voted already
+        deadline_check1 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,student_id=user.id,vote="Up").all()
+        deadline_check2 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,student_id=user.id, date = form.date.data).first()
         # If user already subscribe to a deadline
-        if check_deadline:
-            check_deadline.date = form.date.data
+        if deadline_check1:
+            for element in deadline_check1:
+                element.vote = "Neutral"
+        if deadline_check2:
+            deadline_check2.vote = "Up"
         else:
-            deadline = Deadline(coursework_id = form.coursework_title.data, student_id = user.id, module_id =form.id.data,lecturer_id = '', date = form.date.data)
+            deadline = Deadline(coursework_id = form.coursework_title.data, student_id = user.id, module_id =form.id.data,lecturer_id = '', date = form.date.data, vote = "Up")
             db.session.add(deadline)
         db.session.commit()
         return redirect(url_for('home'))
@@ -404,7 +394,7 @@ def prepare_flask_request(request):
 
 
 @app.route('/', methods=['GET', 'POST'])
-def index():
+def login():
     req = prepare_flask_request(request)
     auth = init_saml_auth(req)
     errors = []
@@ -484,6 +474,7 @@ def index():
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
             print(attributes)
+            return redirect(url_for('home'))
 
     return render_template(
         'index.html',
@@ -494,6 +485,9 @@ def index():
         attributes=attributes,
         paint_logout=paint_logout
     )
+
+
+
 
 
 @app.route('/attrs/')

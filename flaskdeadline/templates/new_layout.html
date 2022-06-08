@@ -6,7 +6,7 @@
     <!-- <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.98.0"> -->
-    <title>EEE Deadline Tool</title>
+    <title>EEE Deadline Discovery Tool</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.2/examples/dashboard/">
 
@@ -118,6 +118,15 @@
       background: #ffffff;
       padding: 10px 20px;
       border: 1px solid #b5b4b4;
+      width: 100%;
+      border-radius: 3px;
+      margin-bottom: 20px;
+    } 
+
+    .legend-section {
+      background: #ffffff;
+      padding: 10px 20px;
+      border: 1px solid #b5b4b4;
       width: 35%;
       border-radius: 3px;
       margin-bottom: 20px;
@@ -174,9 +183,9 @@
     
 <header class="navbar navbar-dark sticky-top bg-primary flex-md  p-0 shadow">
   {%if staff%}
-  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="{{url_for('staff')}}">EEE Deadline Tool</a>
+  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="{{url_for('staff')}}">EEE Deadline Discovery Tool</a>
   {%else%}
-  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="{{url_for('home')}}">EEE Deadline Tool</a>
+  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="{{url_for('home')}}">EEE Deadline Discovery Tool</a>
   {%endif%}
   <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -184,7 +193,7 @@
     <div class="navbar-nav">
         <div class="nav-item text-nowrap">
           <a class="nav-link px-3" href="{{url_for('login')}}">Login</a>
-          <a class="nav-link px-3" href="{{url_for('register')}}">Register</a>
+          <a class="nav-link px-3" href="/?slo">Register</a>
         </div>
   </div>
 </header>
