@@ -4,8 +4,8 @@ from sqlite3 import Date
 from xml.sax.xmlreader import AttributesImpl
 from flask import render_template, url_for, flash, redirect, request, session, make_response
 from flaskdeadline import app, db
-from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework
-from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm
+from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours
+from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm, FeedbackForm
 from sqlalchemy import update, func
 from datetime import datetime
 from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
@@ -56,17 +56,25 @@ def test():
 
 @app.route('/index1')
 def index1():
-    user = Lecturer.query.filter_by(id='0425569').first()
+    cw = Coursework.query.all()
+    print(cw)
+    cww = Coursework.query.filter_by(module_id='ELEC60006').first()
+    print(cww)
+    print(cww.module)
     mod = Module.query.filter_by(id='ELEC60006').first()
-    user.module_responsible.append(mod)
-    db.session.commit()
-    total_hours = db.session.query(func.avg(Coursework.hours).label('average')).filter_by(id="Coursework 1",module_id="ELEC60006").all()
-    print(user.module_responsible)
+    print(mod.module_cw)
+    print(cww.module.ects*cww.breakdown)
+    # user.module_responsible.append(mod)
+    # db.session.commit()
+    all_cw = Coursework.query.all()
+    print(all_cw[0].module.title)
+    total_hours = db.session.query(func.avg(Hours.hours).label('average')).filter_by(coursework_title="Coursework 1",module_id="ELEC60006").all()
+    # print(user.module_responsible)
     print(total_hours[0][0])
-    if mod:
-        print("yes")
-    else:
-        print("no")
+    # if mod:
+    #     print("yes")
+    # else:
+    #     print("no")
     return render_template("index1.html")
 
 @app.route('/<string:module>/<string:cw>/<string:date>/up')
@@ -100,6 +108,30 @@ def downvote_deadline(module,cw,date):
         db.session.add(insert)
     db.session.commit()
     return redirect(url_for('home'))
+
+@app.route("/feedback/<string:module>/<string:cw>", methods=['GET', 'POST'])
+def feedback(module,cw):
+    form = FeedbackForm()
+    mod = Module.query.filter_by(title=module).first()
+    user = Student.query.filter_by(stream='EIE').first()
+    cw_data = Coursework.query.filter_by(title=cw, module_id = mod.id).first()
+    print(cw)
+    if form.validate_on_submit():
+        expectation = 1 # Similar to expectation
+        if form.expectation.data == "More than expected":
+            expectation = 2
+        elif form.expectation.data == "Less than expected":
+            expectation = 0
+        check_hours = Hours.query.filter_by(student_id = user.id, coursework_title = cw, module_id = mod.id).first()
+        if check_hours:
+            check_hours.hours = form.hours.data
+            check_hours.expectation = expectation
+        else:
+            new_hour = Hours(module_id=mod.id, student_id=user.id,coursework_title=cw, hours=form.hours.data, expected = expectation)
+            db.session.add(new_hour)
+        db.session.commit()
+        return redirect(url_for('home'))
+    return render_template('feedback.html', form=form, cw =cw_data)
 
 @app.route('/subscribed/<string:module_id>')
 def subscribed(module_id):
@@ -141,10 +173,11 @@ def new_mod():
         if check_id or check_title:
             flash('Module already exists', 'danger')
         else:
-            module = Module(id = form.id.data, title = form.title.data)
+            module = Module(id = form.id.data, title = form.title.data,ects=form.ects.data)
+            cw = Coursework(title = form.coursework_title.data, module_id = form.id.data, breakdown = 10)
             deadline = Deadline(coursework_id = form.coursework_title.data, student_id = user.id, module_id =form.id.data,lecturer_id = '', date = form.date.data, vote = "Up")
-            db.session.add(module)
-            db.session.add(deadline)
+            db.session.add_all([module,cw,deadline])
+            db.session.commit()
             user.module_taken.append(module)
             db.session.commit()
             return redirect(url_for('home'))
@@ -321,6 +354,16 @@ def home():
     .group_by(Deadline.coursework_id,Deadline.module_id,Deadline.date)
      ).filter(Deadline.module_id.in_(check)).all()
     print(all_deadlines_subscribed)
+    no_hours = {}
+    all_cw = Coursework.query.all()
+    print(all_cw[0].module.title)
+    for cw in all_cw:
+        avg_hrs = db.session.query(func.avg(Hours.hours).label('average')).filter_by(coursework_title=cw.title,module_id=cw.module_id).all()
+        if cw.module.title in no_hours:
+            no_hours[cw.module.title][cw.title] = avg_hrs[0][0]
+        else:
+            no_hours[cw.module.title] = {cw.title:avg_hrs[0][0]}
+    print(no_hours)
     t = {}
     for element in all_deadlines_subscribed:
         mod = Module.query.filter_by(id=element[1]).first()
@@ -371,7 +414,7 @@ def home():
     # # db.session.commit()
     # print(modules.student_taking)
 
-    return render_template("new_home.html", user_modules=t, avail_modules = avail, taking = user.module_taken, user=user, no_deadline=no_deadline_mod)
+    return render_template("new_home.html", user_modules=t, avail_modules = avail, taking = user.module_taken, user=user, no_deadline=no_deadline_mod, hours = no_hours)
 
 
 
@@ -474,7 +517,7 @@ def login():
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
             print(attributes)
-            return redirect(url_for('home'))
+            # return redirect(url_for('home'))
 
     return render_template(
         'index.html',

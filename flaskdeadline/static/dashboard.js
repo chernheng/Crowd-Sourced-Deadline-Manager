@@ -12,7 +12,7 @@
     type: 'line',
     data: {
       labels: [
-        'Sunday',
+        'Sunda',
         'Monday',
         'Tuesday',
         'Wednesday',

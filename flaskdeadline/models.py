@@ -42,6 +42,7 @@ class Student(db.Model):
 class Module(db.Model):
     id = db.Column(db.String(9), primary_key=True)
     title = db.Column(db.String(100), nullable=False)
+    ects = db.Column(db.Float, nullable=False,default=5.0)
     content = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
@@ -49,15 +50,28 @@ class Module(db.Model):
 
 
 # To calculate number of hours
-class Coursework(db.Model):
-    id = db.Column(db.String(100), primary_key=True)
+class Hours(db.Model):
+    coursework_title = db.Column(db.String(100), primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=False, primary_key=True)
     module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False, primary_key=True)
     hours = db.Column(db.Integer, nullable=False)
-    __table_args__ = (db.UniqueConstraint(id, student_id, module_id),)
+    expected = db.Column(db.Integer, nullable=False) # 1 is expected, 0 is less than expected, 2 is more than expected
+    __table_args__ = (db.UniqueConstraint(coursework_title, student_id, module_id),)
 
     def __repr__(self):
-        return f"Coursework('{self.module_id}', '{self.id}', '{self.student_id}', '{self.hours}')"
+        return f"Hours('{self.module_id}', '{self.coursework_title}', '{self.student_id}', '{self.hours}')"
+
+class Coursework(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False)
+    breakdown = db.Column(db.Integer, nullable=False)
+    __table_args__ = (db.UniqueConstraint(title, module_id),)
+    module = db.relationship("Module", backref="module_cw")
+
+    def __repr__(self):
+        return f"Coursework('{self.module_id}', '{self.id}', '{self.title}', '{self.breakdown}')"
+
 
 class Lecturer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
