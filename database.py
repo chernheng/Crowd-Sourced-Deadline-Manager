@@ -19,6 +19,7 @@ module_9 = Module(id='ELEC60021', title ='Mathematics for Signals and Systems', 
 lecturer_1 = Lecturer(id = '0425567', name ='Jeremy Pitt')
 lecturer_2 = Lecturer(id = '0425568', name ='Edward Stott')
 lecturer_3 = Lecturer(id = '0425569', name ='Javier Barria')
+lecturer_3.module_responsible.append(module_4)
 timezone_variable = gettz("Europe/London") 
 cw_1 = Coursework(title = "Coursework 1", module_id = "ELEC60005", breakdown = 10)
 cw_2 = Coursework(title = "Coursework 1", module_id = "ELEC60006", breakdown = 20)

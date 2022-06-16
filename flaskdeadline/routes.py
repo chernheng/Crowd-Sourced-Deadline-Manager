@@ -5,13 +5,13 @@ from xml.sax.xmlreader import AttributesImpl
 from flask import render_template, url_for, flash, redirect, request, session, make_response
 from flaskdeadline import app, db
 from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours
-from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm, FeedbackForm
-from sqlalchemy import update, func
+from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm, FeedbackForm, ResponsibilityForm, StaffEditForm, BreakdownForm
+from sqlalchemy import update, func, and_
 from datetime import datetime
 from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
 from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
 
-
+login_info = None
 @app.route("/test")
 def test():
     avail = Module.query.all()
@@ -56,25 +56,13 @@ def test():
 
 @app.route('/index1')
 def index1():
-    cw = Coursework.query.all()
-    print(cw)
-    cww = Coursework.query.filter_by(module_id='ELEC60006').first()
-    print(cww)
-    print(cww.module)
+    global login_info
+    user = Student.query.filter_by(stream='EIE').first()
     mod = Module.query.filter_by(id='ELEC60006').first()
-    print(mod.module_cw)
-    print(cww.module.ects*cww.breakdown)
-    # user.module_responsible.append(mod)
-    # db.session.commit()
-    all_cw = Coursework.query.all()
-    print(all_cw[0].module.title)
-    total_hours = db.session.query(func.avg(Hours.hours).label('average')).filter_by(coursework_title="Coursework 1",module_id="ELEC60006").all()
-    # print(user.module_responsible)
-    print(total_hours[0][0])
-    # if mod:
-    #     print("yes")
-    # else:
-    #     print("no")
+    mod.gta_responsible.append(user)
+    db.session.commit()
+    print(user.module_gta)
+    print(login_info)
     return render_template("index1.html")
 
 @app.route('/<string:module>/<string:cw>/<string:date>/up')
@@ -192,6 +180,10 @@ def new_deadline(module_title):
         # 2 checks: 1. User votes up on another deadline / 2. Deadline already exist and user voted already
         deadline_check1 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,student_id=user.id,vote="Up").all()
         deadline_check2 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,student_id=user.id, date = form.date.data).first()
+        cw_check = Coursework.query.filter_by(module_id=form.id.data,title =form.coursework_title.data).first()
+        if not cw_check:
+            cw = Coursework(title = form.coursework_title.data, module_id =form.id.data, breakdown = form.breakdown.data)
+            db.session.add(cw)
         # If user already subscribe to a deadline
         if deadline_check1:
             for element in deadline_check1:
@@ -224,31 +216,189 @@ def edit_mod(module_title):
         else:
             mod.title = form.title.data
             mod.id = form.id.data
+            mod.ects = form.ects.data
             db.session.commit()
             stmt = update(Deadline).where(Deadline.module_id==original_id).values(module_id=form.id.data).execution_options(synchronize_session="fetch")
+            stmt2 = update(Hours).where(Hours.module_id==original_id).values(module_id=form.id.data).execution_options(synchronize_session="fetch")
+            stmt3 = update(Coursework).where(Coursework.module_id==original_id).values(module_id=form.id.data).execution_options(synchronize_session="fetch")
             db.session.execute(stmt)
+            db.session.execute(stmt2)
+            db.session.execute(stmt3)
             db.session.commit()
             return redirect(url_for('home'))
     return render_template('update_mod.html', form=form, mod =mod)
 
+@app.route("/breakdown/<string:module_title>/<string:cw>", methods=['GET', 'POST'])
+def edit_breakdown(module_title,cw):
+    form = BreakdownForm()
+    mod = Module.query.filter_by(title=module_title).first()
+    cwk = Coursework.query.filter_by(title=cw,module_id = mod.id).first()
+    original_title = cwk.title
+    if form.validate_on_submit():
+        if original_title != form.coursework_title.data:
+            cwk.title = form.coursework_title.data
+            db.session.commit()
+            stmt = update(Deadline).where(and_(Deadline.coursework_id==original_title, Deadline.module_id==mod.id)).values(coursework_id=form.coursework_title.data).execution_options(synchronize_session="fetch")
+            stmt2 = update(Hours).where(and_(Hours.coursework_title==original_title, Hours.module_id==mod.id)).values(coursework_title=form.coursework_title.data).execution_options(synchronize_session="fetch")
+            db.session.execute(stmt)
+            db.session.execute(stmt2)
+        cwk.breakdown = form.breakdown.data
+        db.session.commit()
+        return redirect(url_for('home'))
+    return render_template('edit_breakdown.html', form=form, cwk=cwk)
+
+@app.route('/staff/<string:module>/<string:cw>/<string:date>/up')
+def staff_upvote_deadline(module,cw,date):
+    user = Lecturer.query.filter_by(id='0425569').first()
+    mod = Module.query.filter_by(title=module).first()
+    to_change = Deadline.query.filter_by(lecturer=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
+    if to_change:
+        if to_change.vote == "Up":
+            to_change.vote = "Neutral"
+        else:
+            to_change.vote="Up"
+    else:
+        insert = Deadline(student_id = '',lecturer_id=user.id, module_id=mod.id,coursework_id=cw,date=datetime.strptime(date, '%Y-%m-%d %H:%M:%S'),vote="Up")
+        db.session.add(insert)
+    db.session.commit()
+    return redirect(url_for('staff'))
+
+@app.route('/staff/<string:module>/<string:cw>/<string:date>/down')
+def staff_downvote_deadline(module,cw,date):
+    user = Lecturer.query.filter_by(id='0425569').first()
+    mod = Module.query.filter_by(title=module).first()
+    to_change = Deadline.query.filter_by(lecturer=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
+    if to_change:
+        if to_change.vote == "Down":
+            to_change.vote = "Neutral"
+        else:
+            to_change.vote = "Down"
+    else:
+        insert = Deadline(student_id = '', lecturer_id=user.id,module_id=mod.id,coursework_id=cw,date=datetime.strptime(date, '%Y-%m-%d %H:%M:%S'),vote="Down")
+        db.session.add(insert)
+    db.session.commit()
+    return redirect(url_for('staff'))
+
+@app.route("/staff/gta/<string:module_title>", methods=['GET', 'POST'])
+def staff_gta_assignment(module_title):
+    form = BreakdownForm()
+    mod = Module.query.filter_by(title=module_title).first()
+    if form.validate_on_submit():
+        return redirect(url_for('staff'))
+    return render_template('edit_breakdown.html', form=form, staff=True)
+
+@app.route("/staff/breakdown/<string:module_title>/<string:cw>", methods=['GET', 'POST'])
+def staff_edit_breakdown(module_title,cw):
+    form = BreakdownForm()
+    mod = Module.query.filter_by(title=module_title).first()
+    cwk = Coursework.query.filter_by(title=cw,module_id = mod.id).first()
+    original_title = cwk.title
+    if form.validate_on_submit():
+        if original_title != form.coursework_title.data:
+            cwk.title = form.coursework_title.data
+            db.session.commit()
+            stmt = update(Deadline).where(and_(Deadline.coursework_id==original_title, Deadline.module_id==mod.id)).values(coursework_id=form.coursework_title.data).execution_options(synchronize_session="fetch")
+            stmt2 = update(Hours).where(and_(Hours.coursework_title==original_title, Hours.module_id==mod.id)).values(coursework_title=form.coursework_title.data).execution_options(synchronize_session="fetch")
+            db.session.execute(stmt)
+            db.session.execute(stmt2)
+        cwk.breakdown = form.breakdown.data
+        db.session.commit()
+        return redirect(url_for('staff'))
+    return render_template('edit_breakdown.html', form=form, cwk=cwk,staff=True)
+
 @app.route("/staff/module/new", methods=['GET', 'POST'])
 def new_staff_mod():
-    form = ModuleForm()
-    user = Student.query.filter_by(stream='EIE').first()
+    form = ResponsibilityForm()
+    user = Lecturer.query.filter_by(id='0425569').first()
     if form.validate_on_submit():
         check_id = Module.query.filter_by(id = form.id.data).first()
         check_title = Module.query.filter_by(title = form.title.data).first()
-        if check_id or check_title:
-            flash('Module already exists', 'danger')
+        if check_id:
+            user.module_responsible.append(check_id)
+        elif check_title:
+            user.module_responsible.append(check_title)
         else:
-            module = Module(id = form.id.data, title = form.title.data)
-            deadline = Deadline(coursework_id = form.coursework_title.data, student_id = user.id, module_id =form.id.data,lecturer_id = '', date = form.date.data)
-            db.session.add(module)
-            db.session.add(deadline)
-            user.module_taken.append(module)
-            db.session.commit()
-            return redirect(url_for('home'))
+            module = Module(id = form.id.data, title = form.title.data, ects = form.ects.data)
+            user.module_responsible.append(module)
+        db.session.commit()
+        return redirect(url_for('staff'))
     return render_template('staff_mod.html', form=form, staff=True)
+
+@app.route('/staff/remove/<string:module>')
+def remove_res(module):
+    user = Lecturer.query.filter_by(id='0425569').first()
+    removing = Module.query.filter_by(title=module).first()
+    user.module_responsible.remove(removing)
+    db.session.commit()
+    return redirect(url_for('staff'))
+
+@app.route("/staff/deadline/new/<string:module_title>", methods=['GET', 'POST'])
+def staff_new_deadline(module_title):
+    form = DeadlineForm()
+    mod = Module.query.filter_by(title=module_title).first()
+    user = Lecturer.query.filter_by(id='0425569').first()
+    if form.validate_on_submit():
+        # 2 checks: 1. User votes up on another deadline / 2. Deadline already exist and user voted already
+        deadline_check1 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,lecturer_id=user.id,vote="Up").all()
+        deadline_check2 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,lecturer_id=user.id, date = form.date.data).first()
+        # If user already subscribe to a deadline
+        if deadline_check1:
+            for element in deadline_check1:
+                element.vote = "Neutral"
+        if deadline_check2:
+            deadline_check2.vote = "Up"
+        else:
+            deadline = Deadline(coursework_id = form.coursework_title.data, student_id = '', module_id =form.id.data,lecturer_id = user.id, date = form.date.data, vote = "Up")
+            db.session.add(deadline)
+        db.session.commit()
+        return redirect(url_for('staff'))
+    return render_template('new_deadline.html', form=form, mod=mod,staff=True)
+
+@app.route("/staff/edit/<string:module_title>", methods=['GET', 'POST'])
+def staff_edit_mod(module_title):
+    form = StaffEditForm()
+    mod = Module.query.filter_by(title=module_title).first()
+    original_id = mod.id
+    original_title = mod.title
+    check_id = check_title = False
+    if form.validate_on_submit():
+        if original_id != form.id.data:
+            check_id = Module.query.filter_by(id = form.id.data).first()
+        if original_title != form.title.data:
+            check_title = Module.query.filter_by(title = form.title.data).first()
+        if check_id or check_title:
+            flash('Module ID or title already exists', 'danger')
+        else:
+            mod.title = form.title.data
+            mod.id = form.id.data
+            mod.ects = form.ects.data
+            mod.content = form.content.data
+            db.session.commit()
+            stmt = update(Deadline).where(Deadline.module_id==original_id).values(module_id=form.id.data).execution_options(synchronize_session="fetch")
+            stmt2 = update(Hours).where(Hours.module_id==original_id).values(module_id=form.id.data).execution_options(synchronize_session="fetch")
+            stmt3 = update(Coursework).where(Coursework.module_id==original_id).values(module_id=form.id.data).execution_options(synchronize_session="fetch")
+            db.session.execute(stmt)
+            db.session.execute(stmt2)
+            db.session.execute(stmt3)
+            db.session.commit()
+            return redirect(url_for('staff'))
+    return render_template('staff_update_mod.html', form=form, mod =mod,staff=True)
+
+
+@app.route("/staff/feedback/<string:module>/<string:cw>", methods=['GET', 'POST'])
+def staff_feedback(module,cw):
+    mod = Module.query.filter_by(title=module).first()
+    feedback_data = (db.session.query(Hours.student_id,Hours.hours,Hours.expected)
+    .group_by(Hours.student_id,Hours.hours,Hours.expected)
+     ).filter_by(module_id = mod.id,coursework_title=cw).all()
+    for i in range(len(feedback_data)):
+        if feedback_data[i][2] == 0:
+            feedback_data[i] = (feedback_data[i][0],feedback_data[i][1], "Less Than Expected")
+        elif feedback_data[i][2] == 1:
+            feedback_data[i] = (feedback_data[i][0],feedback_data[i][1], "Similar to my Expectations")
+        elif feedback_data[i][2] == 2:
+            feedback_data[i] = (feedback_data[i][0],feedback_data[i][1], "More Than Expected")
+    return render_template('staff_hours_data.html', attributes= feedback_data, staff= True)
 
 @app.route('/staff')
 def staff():
@@ -256,10 +406,6 @@ def staff():
     teacher = Lecturer.query.filter_by(id='0425569').first()
 
     # All modules responsible by the teacher
-    staff_responsible = teacher.module_responsible
-
-
-    Dead = Deadline.query.first()
     # Check which modules are taken by the teacher
     check = [row.id for row in teacher.module_responsible]
 
@@ -268,66 +414,117 @@ def staff():
     print(deadlines_voted)
     
     # All deadlines subscribed by teacher
-    all_deadlines_subscribed = (db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date, func.count(Deadline.lecturer_id).label("# people"))
+    all_deadlines_subscribed = (db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date,func.count(Deadline.vote).filter(Deadline.vote=="Up"),func.count(Deadline.vote).filter(Deadline.vote=="Down"),func.count(Deadline.vote).label("# people"))
     .group_by(Deadline.coursework_id,Deadline.module_id,Deadline.date)
      ).filter(Deadline.module_id.in_(check)).all()
 
     # All other deadlines not subscribed by teacher
-    all_deadlines_else = (db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date, func.count(Deadline.lecturer_id).label("# people"))
+    all_deadlines_else = (db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date,func.count(Deadline.vote).filter(Deadline.vote=="Up"),func.count(Deadline.vote).filter(Deadline.vote=="Down"),func.count(Deadline.vote).label("# people"))
     .group_by(Deadline.coursework_id,Deadline.module_id,Deadline.date)
      ).filter(Deadline.module_id.not_in(check)).all()
+    
+    # Checking the average number of hours for each coursework
+    no_hours = {}
+    all_cw = Coursework.query.all()
+    print(all_cw[0].title)
+    for cw in all_cw:
+        avg_hrs = db.session.query(func.avg(Hours.hours).label('average')).filter_by(coursework_title=cw.title,module_id=cw.module_id).all()
+        count = db.session.query(func.count(Hours.hours).label('number')).filter_by(coursework_title=cw.title,module_id=cw.module_id).all()
+        if cw.module.title in no_hours:
+            no_hours[cw.module.title][cw.title] = (avg_hrs[0][0],count[0][0])
+        else:
+            no_hours[cw.module.title] = {cw.title:(avg_hrs[0][0],count[0][0])}
+    print(no_hours)
 
     teacher_mod = {}
+    
     for element in all_deadlines_subscribed:
         mod = Module.query.filter_by(id=element[1]).first()
         modname = mod.title
-        voted = False
+        lect_responsible = mod.lecturer_responsible
+        lect_deadline = []
+
+        if lect_responsible:
+            for lect in lect_responsible:
+                lect_deadline.append(Deadline.query.filter_by(lecturer_id=lect.id).all())
+        else:
+            lect_deadline = None
+        data = [0] #[Did user vote, Did Lect vote, Is majority?]    
         for vote in deadlines_voted:
             if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
-                voted = True
+                if vote.vote == "Up":
+                    data[0] = 1
+                elif vote.vote == "Down":
+                    data[0] = 2
+        lect_vote = False
+        if lect_deadline:
+            for outer in lect_deadline:
+                for inner in outer:
+                    if inner.vote =="Up" and inner.date==element[2]:
+                        lect_vote = True
+        data.append(lect_vote)
+        if element[3] > element[5]/2:
+            data.append(True)
+        else:
+            data.append(False)
         if modname in teacher_mod:
             temp = teacher_mod[modname]
             if element[0] in teacher_mod[modname]:
                 temp = teacher_mod[modname][element[0]]
-                temp.append([element[2],element[3],voted])
-                teacher_mod[modname][element[0]] = sorted(temp, key = lambda x: x[1], reverse=True)
+                temp.append([element[2],element[3],element[4],data])
+                teacher_mod[modname][element[0]] = temp
             else:
-                teacher_mod[modname][element[0]] = [[element[2],element[3],voted]]
+                teacher_mod[modname][element[0]] = [[element[2],element[3],element[4],data]]
         else:
-            teacher_mod[modname] = {element[0]:[[element[2],element[3],voted]]}
+            teacher_mod[modname] = {element[0]:[[element[2],element[3],element[4],data]]}
+    
     all_else_mod = {}
     for element in all_deadlines_else:
         mod = Module.query.filter_by(id=element[1]).first()
         modname = mod.title
+        lect = mod.lecturer_responsible
+        if lect:
+            lect_deadline = Deadline.query.filter_by(lecturer_id=lect.id).all()
+        else:
+            lect_deadline = None
+        data = [0] #[Did user vote, Did Lect vote, Is majority?]
+        for vote in deadlines_voted:
+            if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
+                if vote.vote == "Up":
+                    data[0] = 1
+                elif vote.vote == "Down":
+                    data[0] = 2
+        if lect_deadline:
+            if lect_deadline.vote =="Up" and lect_deadline.date==element[2]:
+                data.append(True)
+            else:
+                data.append(False)
+        else:
+            data.append(False)
+        if element[3] > element[5]/2:
+            data.append(True)
+        else:
+            data.append(False)
         if modname in all_else_mod:
             temp = all_else_mod[modname]
             if element[0] in all_else_mod[modname]:
                 temp = all_else_mod[modname][element[0]]
-                temp.append([element[2],element[3]])
-                all_else_mod[modname][element[0]] = sorted(temp, key = lambda x: x[1], reverse=True)
+                temp.append([element[2],element[3],element[4],data])
+                all_else_mod[modname][element[0]] = temp
             else:
-                all_else_mod[modname][element[0]] = [[element[2],element[3]]]
+                all_else_mod[modname][element[0]] = [[element[2],element[3],element[4],data]]
         else:
-            all_else_mod[modname] = {element[0]:[[element[2],element[3]]]}
-    
-    print(all_else_mod)
-    # print(unique)
-    # print(deadline)
-    # print(user)
-    # print(user.module_taken)
+            all_else_mod[modname] = {element[0]:[[element[2],element[3],element[4],data]]}
 
-    # # deadline = Deadline.query.filter_by()
-    # # student.module_taken.append(modules)
-    # # student.module_taken.remove(modules)
-    # # db.session.commit()
-    # print(modules.student_taking)
+        print(teacher.module_responsible[0].content)
 
-    return render_template("staff.html", teacher_deadlines=teacher_mod, avail_modules = avail, taking = teacher.module_responsible, user=teacher, all_else=all_else_mod, staff=True)
+    return render_template("new_staff.html", teacher_deadlines=teacher_mod, avail_modules = avail, taking = teacher.module_responsible, user=teacher, all_else=all_else_mod, staff=True, hours= no_hours)
 
 
 
 @app.route('/home')
 def home():
+
     avail = Module.query.all()
     user = Student.query.filter_by(stream='EIE').first()
     Dead = Deadline.query.first()
@@ -353,40 +550,61 @@ def home():
     all_deadlines_subscribed = (db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date,func.count(Deadline.vote).filter(Deadline.vote=="Up"),func.count(Deadline.vote).filter(Deadline.vote=="Down"),func.count(Deadline.vote).label("# people"))
     .group_by(Deadline.coursework_id,Deadline.module_id,Deadline.date)
      ).filter(Deadline.module_id.in_(check)).all()
+    '''
+    all_deadlines_subscribed had this form:
+    ('Coursework 1', 'ELEC40005', datetime.datetime(2022, 6, 17, 3, 25), 1, 0, 1)
+    (Cw_title, Module_id, date, # of upvotes, # of downvotes, total # of votes)
+    '''
     print(all_deadlines_subscribed)
     no_hours = {}
     all_cw = Coursework.query.all()
     print(all_cw[0].module.title)
     for cw in all_cw:
         avg_hrs = db.session.query(func.avg(Hours.hours).label('average')).filter_by(coursework_title=cw.title,module_id=cw.module_id).all()
+        count = db.session.query(func.count(Hours.hours).label('number')).filter_by(coursework_title=cw.title,module_id=cw.module_id).all()
         if cw.module.title in no_hours:
-            no_hours[cw.module.title][cw.title] = avg_hrs[0][0]
+            no_hours[cw.module.title][cw.title] = (avg_hrs[0][0],count[0][0])
         else:
-            no_hours[cw.module.title] = {cw.title:avg_hrs[0][0]}
+            no_hours[cw.module.title] = {cw.title:(avg_hrs[0][0],count[0][0])}
     print(no_hours)
     t = {}
+    '''
+    Aimed to extract the data in this form:
+    {'Communication Networks': 
+        {'Coursework 1': [[datetime.datetime(2022, 6, 18, 12, 0), 2, 0, [1, False, True]], [datetime.datetime(2022, 6, 19, 12, 0), 1, 0, [0, False, True]]], 
+         'Coursework 2': [[datetime.datetime(2022, 6, 20, 12, 0), 0, 1, [0, False, False]]]}}
+    Title of module as the key for a dict, and the output is another dict with the coursework title as the key
+    The output of the nest dict is an array of array, with each element of the outer array being data corresponding to 1 deadline.
+    Each element of the inner array is as follow:
+        [date, upvotes, downvotes, [What user voted for: 1 -> up, 2-> down, 0 -> neutral], Did Lect responsible vote?, Is this the majority?]]
+    '''
     for element in all_deadlines_subscribed:
         mod = Module.query.filter_by(id=element[1]).first()
         modname = mod.title
-        lect = mod.lecturer_responsible
-        if lect:
-            lect_deadline = Deadline.query.filter_by(lecturer_id=lect.id).all()
+        lect_responsible = mod.lecturer_responsible
+        lect_deadline = []
+
+        if lect_responsible:
+            for lect in lect_responsible:
+                lect_deadline.append(Deadline.query.filter_by(lecturer_id=lect.id).all())
         else:
             lect_deadline = None
         data = [0] #[Did user vote, Did Lect vote, Is majority?]
+        # What user voted
         for vote in deadlines_voted:
             if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
                 if vote.vote == "Up":
                     data[0] = 1
                 elif vote.vote == "Down":
                     data[0] = 2
+        # if lect voted that particular deadline
+        lect_vote = False
         if lect_deadline:
-            if lect_deadline.vote =="Up" and lect_deadline.date==element[2]:
-                data.append(True)
-            else:
-                data.append(False)
-        else:
-            data.append(False)
+            for outer in lect_deadline:
+                for inner in outer:
+                    if inner.vote =="Up" and inner.date==element[2]:
+                        lect_vote = True
+        data.append(lect_vote)
         if element[3] > element[5]/2:
             data.append(True)
         else:
@@ -514,10 +732,12 @@ def login():
 
     if 'samlUserdata' in session:
         paint_logout = True
+        global login_info
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
+            login_info = attributes
             print(attributes)
-            # return redirect(url_for('home'))
+            # return redirect(url_for('index1'))
 
     return render_template(
         'index.html',
@@ -528,8 +748,6 @@ def login():
         attributes=attributes,
         paint_logout=paint_logout
     )
-
-
 
 
 

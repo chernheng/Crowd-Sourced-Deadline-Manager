@@ -88,3 +88,42 @@ def show_subpath(subpath):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+
+for element in all_deadlines_else:
+        mod = Module.query.filter_by(id=element[1]).first()
+        modname = mod.title
+        lect = mod.lecturer_responsible
+        if lect:
+            lect_deadline = Deadline.query.filter_by(lecturer_id=lect.id).all()
+        else:
+            lect_deadline = None
+        data = [0] #[Did user vote, Did Lect vote, Is majority?]
+        for vote in deadlines_voted:
+            if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
+                if vote.vote == "Up":
+                    data[0] = 1
+                elif vote.vote == "Down":
+                    data[0] = 2
+        if lect_deadline:
+            if lect_deadline.vote =="Up" and lect_deadline.date==element[2]:
+                data.append(True)
+            else:
+                data.append(False)
+        else:
+            data.append(False)
+        if element[3] > element[5]/2:
+            data.append(True)
+        else:
+            data.append(False)
+        if modname in all_else_mod:
+            temp = all_else_mod[modname]
+            if element[0] in all_else_mod[modname]:
+                temp = all_else_mod[modname][element[0]]
+                temp.append([element[2],element[3],element[4],data])
+                all_else_mod[modname][element[0]] = temp
+            else:
+                all_else_mod[modname][element[0]] = [[element[2],element[3],element[4],data]]
+        else:
+            all_else_mod[modname] = {element[0]:[[element[2],element[3],element[4],data]]}

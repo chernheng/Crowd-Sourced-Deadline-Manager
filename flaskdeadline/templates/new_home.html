@@ -24,7 +24,7 @@
             <h3>{{title}}</h3>
             <div class="btn-toolbar px-4 mb-2 mb-md-0">
                 <div class="btn-group ml-2">
-                <a type="button" class="btn btn-sm btn-outline-secondary" href="/deadline/new/{{title}}">Add new deadline</a>
+                <a type="button" class="btn btn-sm btn-outline-secondary" href="/deadline/new/{{title}}">Add New Deadline</a>
                 <a type="button" class="btn btn-sm btn-outline-secondary" href="/edit/{{title}}">Edit Module Details</a>
                 </div>
             </div>
@@ -70,7 +70,11 @@
             {%for module in taking%}
                 {%if module.title == title%}
             <div class = "col-lg d-flex mb-1 mt-1">
-                <h6><u>Details of Module:</u><br> {{module.content}}</h6>
+              {%for cwk in module.module_cw%}
+                {%if cwk.title == cw%}
+                  <h6 class="detail-content"><u>Details of Module:</u><br>Worth <a href='/breakdown/{{title}}/{{cw}}'>{{cwk.breakdown}}%</a> of Module<br>{{module.content}}</h6>
+                {%endif%}
+              {%endfor%}
             </div>
                 {%endif%}
             {%endfor%}
@@ -78,7 +82,7 @@
         </div>
         </div>
         <div class="d-flex justify-content-start flex-wrap flex-md-nowrap align-items-center pt-1">
-            <h6>Students spent an average of <u>{{hours[title][cw]}}</u> hours on this coursework</h6>
+            <h6>Students spent an average of <u>{{hours[title][cw][0]}}</u> hours on this coursework, {{hours[title][cw][1]}} votes</h6>
             <div class="btn-toolbar px-4 mb-2 mb-md-0">
                 <div class="btn-group ml-2">
                 <a type="button" class="btn btn-sm btn-outline-secondary" href="/feedback/{{title}}/{{cw}}">Give Feedback</a>

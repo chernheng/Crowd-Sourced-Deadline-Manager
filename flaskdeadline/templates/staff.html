@@ -7,18 +7,20 @@
 {% block content %}
 
     {%for title in teacher_deadlines%}
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2">
-            <h3>{{title}}</h3>
-            <div class="btn-toolbar px-4 mb-2 mb-md-0">
-                <div class="btn-group ml-2">
-                <a type="button" class="btn btn-sm btn-outline-secondary" href="/deadline/new/{{title}}">Add new deadline</a>
-                <a type="button" class="btn btn-sm btn-outline-secondary" href="/edit/{{title}}">Edit Module Details</a>
-                </div>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2">
+        <h3>{{title}}</h3>
+        <div class="btn-toolbar px-4 mb-2 mb-md-0">
+            <div class="btn-group ml-2">
+            <a type="button" class="btn btn-sm btn-outline-secondary" href="/deadline/new/{{title}}">Add new deadline</a>
+            <a type="button" class="btn btn-sm btn-outline-secondary" href="/edit/{{title}}">Edit Module Details</a>
             </div>
-            </div>
+        </div>
+        </div>
         {%for cw in teacher_deadlines[title]%}
         <button class="collapsible">{{cw}}</button>
-        <div class="content">
+        <div class="content container">
+            <div class = "row">
+            <div class = "col-sm article-content">
             {%for element in teacher_deadlines[title][cw] %}
             <h6>
                 {%if element[2]%}

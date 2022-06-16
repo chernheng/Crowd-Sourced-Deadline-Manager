@@ -12,46 +12,58 @@
             <form method="POST" action="">
                 {{ form.hidden_tag() }}
                 <fieldset class="form-group">
-                    <legend class="border-bottom mb-4">Add Module Responsibility</legend>
+                    <legend class="border-bottom mb-4">Update Module Details</legend>
                     <div class="form-group mb-4">
                         {{ form.id.label(class="form-control-label") }}
                         {% if form.id.errors %}
-                            {{ form.id(class="form-control form-control-lg is-invalid") }}
+                            {{ form.id(class="form-control form-control-lg is-invalid", value = mod.id) }}
                             <div class="invalid-feedback">
                                 {% for error in form.id.errors %}
                                     <span>{{ error }}</span>
                                 {% endfor %}
                             </div>
                         {% else %}
-                            {{ form.id(class="form-control form-control-lg") }}
+                            {{ form.id(class="form-control form-control-lg" ,value = mod.id) }}
                         {% endif %}
                     </div>
                     <div class="form-group mb-4">
                         {{ form.title.label(class="form-control-label") }}
                         {% if form.title.errors %}
-                            {{ form.title(class="form-control form-control-lg is-invalid") }}
+                            {{ form.title(class="form-control form-control-lg is-invalid", value = mod.title) }}
                             <div class="invalid-feedback">
                                 {% for error in form.title.errors %}
                                     <span>{{ error }}</span>
                                 {% endfor %}
                             </div>
                         {% else %}
-                            {{ form.title(class="form-control form-control-lg") }}
+                            {{ form.title(class="form-control form-control-lg", value = mod.title) }}
                         {% endif %}
                     </div>
                     <div class="form-group mb-4">
                         {{ form.ects.label(class="form-control-label") }}
                         {% if form.ects.errors %}
-                            {{ form.ects(class="form-control form-control-lg is-invalid")}}
+                            {{ form.ects(class="form-control form-control-lg is-invalid" ,placeholder = 5) }}
                             <div class="invalid-feedback">
                                 {% for error in form.ects.errors %}
                                     <span>{{ error }}</span>
                                 {% endfor %}
                             </div>
                         {% else %}
-                            {{ form.ects(class="form-control form-control-lg")}}
+                            {{ form.ects(class="form-control form-control-lg",placeholder = 5) }}
                         {% endif %}
-                        
+                    </div>
+                    <div class="form-group mb-4">
+                        {{ form.content.label(class="form-control-label") }}
+                        {% if form.content.errors %}
+                            {{ form.content(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.content.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.content(class="form-control form-control-lg") }}
+                        {% endif %}
                     </div>
                 </fieldset>
                 <div class="form-group mb-4">

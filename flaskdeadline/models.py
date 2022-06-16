@@ -8,6 +8,11 @@ take = db.Table('take',
     db.Column('module_id', db.Integer, db.ForeignKey('module.id'), primary_key=True)
 ) # set to lower case
 
+gta = db.Table('gta', 
+    db.Column('module_id', db.Integer, db.ForeignKey('module.id'), primary_key=True),  
+    db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True)
+) # set to lower case
+
 responsible = db.Table('responsible', 
     db.Column('lecturer_id', db.Integer, db.ForeignKey('lecturer.id'), primary_key=True),
     db.Column('module_id', db.Integer, db.ForeignKey('module.id'), primary_key=True)
@@ -23,6 +28,7 @@ class Deadline(db.Model):
 
     student = db.relationship("Student", backref="student_vote")
     module = db.relationship("Module", backref="module_vote")
+    lecturer = db.relationship("Lecturer", backref="lecturer_vote")
     vote = db.Column(db.String(10), nullable=False)
 
     def __repr__(self):
@@ -35,6 +41,7 @@ class Student(db.Model):
     stream = db.Column(db.String(3), nullable=False)
     module_taken = db.relationship('Module',secondary = take, backref='student_taking')
 
+
     def __repr__(self):
         return f"Student('{self.id}', '{self.name}', '{self.stream}')"
 
@@ -44,6 +51,7 @@ class Module(db.Model):
     title = db.Column(db.String(100), nullable=False)
     ects = db.Column(db.Float, nullable=False,default=5.0)
     content = db.Column(db.Text, nullable=True)
+    gta_responsible = db.relationship('Student', secondary = gta, backref='module_gta')
 
     def __repr__(self):
         return f"Modules('{self.title}', '{self.id}')"
