@@ -2,6 +2,11 @@
 from flaskdeadline import db
 from datetime import datetime
 
+ACCESS = {
+    'student': 0,
+    'staff': 1,
+    'admin': 2
+}
 
 take = db.Table('take', 
     db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True),
@@ -20,8 +25,8 @@ responsible = db.Table('responsible',
 
 class Deadline(db.Model):
     coursework_id = db.Column(db.String(50), primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=True, primary_key=True)
-    lecturer_id = db.Column(db.Integer, db.ForeignKey("lecturer.id"), nullable=True, primary_key=True)
+    student_id = db.Column(db.String(32), db.ForeignKey("student.id"), nullable=True, primary_key=True)
+    lecturer_id = db.Column(db.String(32), db.ForeignKey("lecturer.id"), nullable=True, primary_key=True)
     module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False, primary_key=True)
     date = db.Column(db.DateTime, nullable=False,primary_key=True, default=datetime.utcnow)
     __table_args__ = (db.UniqueConstraint(coursework_id, student_id, lecturer_id, module_id, date),)
@@ -36,14 +41,14 @@ class Deadline(db.Model):
 
 
 class Student(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(32), primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
-    stream = db.Column(db.String(3), nullable=False)
-    module_taken = db.relationship('Module',secondary = take, backref='student_taking')
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    module_taken = db.relationship('Module',secondary = take, backref='student_taking',lazy='subquery')
 
 
     def __repr__(self):
-        return f"Student('{self.id}', '{self.name}', '{self.stream}')"
+        return f"Student('{self.id}', '{self.name}', '{self.email}')"
 
 
 class Module(db.Model):
@@ -51,7 +56,7 @@ class Module(db.Model):
     title = db.Column(db.String(100), nullable=False)
     ects = db.Column(db.Float, nullable=False,default=5.0)
     content = db.Column(db.Text, nullable=True)
-    gta_responsible = db.relationship('Student', secondary = gta, backref='module_gta')
+    gta_responsible = db.relationship('Student', secondary = gta, backref='module_gta',lazy='subquery')
 
     def __repr__(self):
         return f"Modules('{self.title}', '{self.id}')"
@@ -60,7 +65,7 @@ class Module(db.Model):
 # To calculate number of hours
 class Hours(db.Model):
     coursework_title = db.Column(db.String(100), primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=False, primary_key=True)
+    student_id = db.Column(db.String(32), db.ForeignKey("student.id"), nullable=False, primary_key=True)
     module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False, primary_key=True)
     hours = db.Column(db.Integer, nullable=False)
     expected = db.Column(db.Integer, nullable=False) # 1 is expected, 0 is less than expected, 2 is more than expected
@@ -75,16 +80,31 @@ class Coursework(db.Model):
     module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False)
     breakdown = db.Column(db.Integer, nullable=False)
     __table_args__ = (db.UniqueConstraint(title, module_id),)
-    module = db.relationship("Module", backref="module_cw")
+    module = db.relationship("Module", backref="module_cw",lazy='subquery')
 
     def __repr__(self):
         return f"Coursework('{self.module_id}', '{self.id}', '{self.title}', '{self.breakdown}')"
 
 
 class Lecturer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(32), primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
-    module_responsible = db.relationship('Module',secondary = responsible, backref='lecturer_responsible')
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    module_responsible = db.relationship('Module',secondary = responsible, backref='lecturer_responsible',lazy='subquery')
 
     def __repr__(self):
         return f"Lecturer('{self.id}', '{self.name}')"
+
+class User():
+    def __init__(self, data, access=ACCESS['student']):
+        self.data = data
+        self.access = access
+    
+    def is_admin(self):
+        return self.access == ACCESS['admin']
+    
+    def is_staff(self):
+        return self.access == ACCESS['staff']
+    
+    def allowed(self, access_level):
+        return self.access >= access_level

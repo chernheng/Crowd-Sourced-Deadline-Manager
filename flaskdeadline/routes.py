@@ -4,66 +4,77 @@ from sqlite3 import Date
 from xml.sax.xmlreader import AttributesImpl
 from flask import render_template, url_for, flash, redirect, request, session, make_response
 from flaskdeadline import app, db
-from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours
+from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, User, ACCESS
 from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm, FeedbackForm, ResponsibilityForm, StaffEditForm, BreakdownForm
 from sqlalchemy import update, func, and_
 from datetime import datetime
 from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
 from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
 
-login_info = None
-@app.route("/test")
+
+VOTE = {
+    'Neutral': 0,
+    'Up': 1,
+    'Down': 2
+}
+@app.route("/teststaff")
 def test():
-    avail = Module.query.all()
-    user = Student.query.filter_by(stream='EIE').first()
-    check = [row.id for row in user.module_taken]
-    # for x in user.module_taken:
-    #     check.append(x.id)
-    print(user.id)
-    # deadline = Deadline.query.filter(Deadline.module_id.in_(check)).all()
-    # unique = db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date).\
-    # group_by(Deadline.coursework_id,Deadline.module_id,Deadline.date).all()
 
 
-    all_deadlines_subscribed = (db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date, func.count(Deadline.lecturer_id).label("# people"))
-    .group_by(Deadline.coursework_id,Deadline.module_id,Deadline.date)
-     ).filter(Deadline.module_id.in_(check)).all()
-    t = {}
-    for element in all_deadlines_subscribed:
-        mod = Module.query.filter_by(id=element[1]).first()
-        modname = mod.title + "/" + element[0]
-        print(modname)
-        if modname in t:
-            temp = t[modname]
-            temp.append((element[2],element[3]))
-            t[modname] = temp
-        else:
-            t[modname] = [(element[2],element[3])]    
-    
-    print(t)
-    # print(unique)
-    # print(deadline)
-    # print(user)
-    # print(user.module_taken)
-
-    # # deadline = Deadline.query.filter_by()
-    # # student.module_taken.append(modules)
-    # # student.module_taken.remove(modules)
-    # # db.session.commit()
-    # print(modules.student_taking)
-
-    return render_template("home.html", user_modules=t, avail_modules = avail, taking = user.module_taken)
+    return redirect(url_for('staff'))
 
 @app.route('/index1')
 def index1():
-    global login_info
-    user = Student.query.filter_by(stream='EIE').first()
-    mod = Module.query.filter_by(id='ELEC60006').first()
-    mod.gta_responsible.append(user)
-    db.session.commit()
-    print(user.module_gta)
-    print(login_info)
+
+
     return render_template("index1.html")
+
+@app.route('/login')
+def login():
+    global user
+    if session['samlNameId']:
+        login_info = session['samlUserdata']
+        print(login_info['urn:oid:0.9.2342.19200300.100.1.1'][0]) # cht119
+        print(login_info['urn:oid:0.9.2342.19200300.100.1.3'][0]) # email
+        print(login_info['urn:oid:1.3.6.1.4.1.5923.1.1.1.1']) # [member,student]
+        print(login_info['urn:oid:2.5.4.4'][0] + ", " + login_info['urn:oid:2.5.4.42'][0])
+        id = login_info['urn:oid:0.9.2342.19200300.100.1.1'][0]
+        email = login_info['urn:oid:0.9.2342.19200300.100.1.3'][0]
+        name = login_info['urn:oid:2.5.4.4'][0] + ", " + login_info['urn:oid:2.5.4.42'][0]
+        membership = login_info['urn:oid:1.3.6.1.4.1.5923.1.1.1.1']
+        session['id'] = id
+        session['name'] = name
+        session['email'] = email
+        if id == 'cht119' and email == 'chern.tan19@imperial.ac.uk':
+            session['access'] = ACCESS['admin']
+            return redirect(url_for('home'))
+        if 'staff' in membership:
+            check_staff= Lecturer.query.filter_by(id =id, name = name, email = email).first()
+            session['access'] = ACCESS['staff']
+            if not check_staff:
+                staff = Lecturer(id=id, name = name, email = email)
+                db.session.add(staff)
+                db.session.commit()
+            return redirect(url_for('staff'))
+        elif 'student' in membership:
+            check_student= Student.query.filter_by(id =id, name = name, email = email).first()
+            session['access'] = ACCESS['student']
+            if not check_student:
+                student = Student(id=id, name = name, email = email)
+                db.session.add(student)
+                db.session.commit()
+            
+    else:
+        print("Not logged in")
+        return redirect(url_for('landing'))
+    # user = Student.query.filter_by(stream='EIE').first()
+    # mod = Module.query.filter_by(id='ELEC60006').first()
+    # mod.gta_responsible.append(user)
+    # db.session.commit()
+    # print(user.module_gta)
+    # print(login_info)
+
+    return redirect(url_for('home'))
 
 @app.route('/<string:module>/<string:cw>/<string:date>/up')
 def upvote_deadline(module,cw,date):
@@ -402,8 +413,18 @@ def staff_feedback(module,cw):
 
 @app.route('/staff')
 def staff():
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash(f'Account created for !', 'danger')
+        return redirect(url_for('home'))
+    else:
+        user = Lecturer.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            return redirect(url_for('landing',message = "User does not exist!"))
     avail = Module.query.all()
-    teacher = Lecturer.query.filter_by(id='0425569').first()
+    teacher = user
 
     # All modules responsible by the teacher
     # Check which modules are taken by the teacher
@@ -441,8 +462,16 @@ def staff():
     for element in all_deadlines_subscribed:
         mod = Module.query.filter_by(id=element[1]).first()
         modname = mod.title
+        gta_array = mod.gta_responsible
+        modname = mod.title
         lect_responsible = mod.lecturer_responsible
         lect_deadline = []
+        gta_deadline = []
+        if gta_array:
+            for gta in gta_array:
+                gta_deadline.append(Deadline.query.filter_by(student_id=gta.id).all())
+        else:
+            gta_deadline = None
 
         if lect_responsible:
             for lect in lect_responsible:
@@ -505,6 +534,14 @@ def staff():
             data.append(True)
         else:
             data.append(False)
+        gta_vote = False
+        if gta_deadline:
+            print(gta_deadline)
+            for outer in gta_deadline:
+                for inner in outer:
+                    if inner.vote =="Up" and inner.date==element[2]:
+                        gta_vote = True
+        data.append(gta_vote)
         if modname in all_else_mod:
             temp = all_else_mod[modname]
             if element[0] in all_else_mod[modname]:
@@ -524,10 +561,16 @@ def staff():
 
 @app.route('/home')
 def home():
-
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        return redirect(url_for('staff'))
+    else:
+        user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            return redirect(url_for('landing',messages = "User does not exist!"))
     avail = Module.query.all()
-    user = Student.query.filter_by(stream='EIE').first()
-    Dead = Deadline.query.first()
     # Check which modules are taken by the user
     check = [row.id for row in user.module_taken]
     # for x in user.module_taken:
@@ -576,13 +619,20 @@ def home():
     Title of module as the key for a dict, and the output is another dict with the coursework title as the key
     The output of the nest dict is an array of array, with each element of the outer array being data corresponding to 1 deadline.
     Each element of the inner array is as follow:
-        [date, upvotes, downvotes, [What user voted for: 1 -> up, 2-> down, 0 -> neutral], Did Lect responsible vote?, Is this the majority?]]
+        [date, upvotes, downvotes, [What user voted for: 1 -> up, 2-> down, 0 -> neutral], Did Lect responsible vote?, Is this the majority?, Did GTA vote?]]
     '''
     for element in all_deadlines_subscribed:
         mod = Module.query.filter_by(id=element[1]).first()
+        gta_array = mod.gta_responsible
         modname = mod.title
         lect_responsible = mod.lecturer_responsible
         lect_deadline = []
+        gta_deadline = []
+        if gta_array:
+            for gta in gta_array:
+                gta_deadline.append(Deadline.query.filter_by(student_id=gta.id).all())
+        else:
+            gta_deadline = None
 
         if lect_responsible:
             for lect in lect_responsible:
@@ -594,9 +644,9 @@ def home():
         for vote in deadlines_voted:
             if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
                 if vote.vote == "Up":
-                    data[0] = 1
+                    data[0] = VOTE['Up']
                 elif vote.vote == "Down":
-                    data[0] = 2
+                    data[0] = VOTE['Down']
         # if lect voted that particular deadline
         lect_vote = False
         if lect_deadline:
@@ -609,6 +659,14 @@ def home():
             data.append(True)
         else:
             data.append(False)
+        gta_vote = False
+        if gta_deadline:
+            print(gta_deadline)
+            for outer in gta_deadline:
+                for inner in outer:
+                    if inner.vote =="Up" and inner.date==element[2]:
+                        gta_vote = True
+        data.append(gta_vote)
         if modname in t:
             temp = t[modname]
             if element[0] in t[modname]:
@@ -655,7 +713,7 @@ def prepare_flask_request(request):
 
 
 @app.route('/', methods=['GET', 'POST'])
-def login():
+def landing():
     req = prepare_flask_request(request)
     auth = init_saml_auth(req)
     errors = []
@@ -735,9 +793,7 @@ def login():
         global login_info
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
-            login_info = attributes
-            print(attributes)
-            # return redirect(url_for('index1'))
+            return redirect(url_for('login'))
 
     return render_template(
         'index.html',
@@ -760,6 +816,7 @@ def attrs():
         paint_logout = True
         if len(session['samlUserdata']) > 0:
             attributes = session['samlUserdata'].items()
+
 
     return render_template('attrs.html', paint_logout=paint_logout,
                            attributes=attributes)
