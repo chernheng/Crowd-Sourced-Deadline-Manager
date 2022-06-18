@@ -13,7 +13,7 @@
             <h3>{{title}}</h3>
             <div class="btn-toolbar px-4 mb-2 mb-md-0">
                 <div class="btn-group ml-2">
-                <a type="button" class="btn btn-sm btn-outline-secondary" href="/deadline/new/{{title}}">Add new deadline</a>
+                <a type="button" class="btn btn-sm btn-outline-secondary" href="/staff/deadline/new/{{title}}">Add new deadline</a>
                 <a type="button" class="btn btn-sm btn-outline-secondary" href="/staff/edit/{{title}}">Edit Module Details</a>
                 <a type="button" class="btn btn-sm btn-outline-secondary" href="/staff/edit/{{title}}">Assign GTA</a>
                 </div>
@@ -51,7 +51,9 @@
                 {%if element[3][1]%}
                 <i class="bi bi-briefcase-fill" style="font-size: 1.1rem;"></i>
                 {% endif %}
+                {%if element[3][3]%}
                 <i class="bi bi-mortarboard-fill" style="font-size: 1.1rem;"></i>
+                {% endif %}
                 <span>)</span>
 
             </h6>
@@ -122,7 +124,9 @@
                 {%if element[3][1]%}
                 <i class="bi bi-briefcase-fill" style="font-size: 1.1rem;"></i>
                 {% endif %}
+                {%if element[3][3]%}
                 <i class="bi bi-mortarboard-fill" style="font-size: 1.1rem;"></i>
+                {% endif %}
                 <span>)</span>
 
             </h6>

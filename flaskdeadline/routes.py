@@ -19,8 +19,10 @@ VOTE = {
 }
 @app.route("/teststaff")
 def test():
-
-
+    session['id'] = 'jbarria'
+    session['name'] = 'Javier Barria'
+    session['email'] = 'j.barria@imperial.ac.uk'
+    session['access'] = ACCESS['staff']
     return redirect(url_for('staff'))
 
 @app.route('/index1')
@@ -78,7 +80,17 @@ def login():
 
 @app.route('/<string:module>/<string:cw>/<string:date>/up')
 def upvote_deadline(module,cw,date):
-    user = Student.query.filter_by(stream='EIE').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
+        return redirect(url_for('staff'))
+    else:
+        user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     mod = Module.query.filter_by(title=module).first()
     to_change = Deadline.query.filter_by(student=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
@@ -94,7 +106,17 @@ def upvote_deadline(module,cw,date):
 
 @app.route('/<string:module>/<string:cw>/<string:date>/down')
 def downvote_deadline(module,cw,date):
-    user = Student.query.filter_by(stream='EIE').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
+        return redirect(url_for('staff'))
+    else:
+        user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     mod = Module.query.filter_by(title=module).first()
     to_change = Deadline.query.filter_by(student=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
@@ -110,9 +132,19 @@ def downvote_deadline(module,cw,date):
 
 @app.route("/feedback/<string:module>/<string:cw>", methods=['GET', 'POST'])
 def feedback(module,cw):
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
+        return redirect(url_for('staff'))
+    else:
+        user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     form = FeedbackForm()
     mod = Module.query.filter_by(title=module).first()
-    user = Student.query.filter_by(stream='EIE').first()
     cw_data = Coursework.query.filter_by(title=cw, module_id = mod.id).first()
     print(cw)
     if form.validate_on_submit():
@@ -134,7 +166,17 @@ def feedback(module,cw):
 
 @app.route('/subscribed/<string:module_id>')
 def subscribed(module_id):
-    user = Student.query.filter_by(stream='EIE').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
+        return redirect(url_for('staff'))
+    else:
+        user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     adding = Module.query.filter_by(id=module_id).first()
     if adding in user.module_taken:
         user.module_taken.remove(adding)
@@ -151,21 +193,21 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
-# @app.route("/login", methods=['GET', 'POST'])
-# def login():
-#     form = LoginForm()
-#     if form.validate_on_submit():
-#         if form.email.data == 'admin@blog.com' and form.password.data == 'password':
-#             flash('Login Successful', 'success')
-#             return redirect(url_for('home'))
-#         else:
-#             flash('Login Unsuccessful. Please check username and password', 'danger')
-#     return render_template('login.html', form=form)
 
 @app.route("/module/new", methods=['GET', 'POST'])
 def new_mod():
     form = ModuleForm()
-    user = Student.query.filter_by(stream='EIE').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
+        return redirect(url_for('staff'))
+    else:
+        user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     if form.validate_on_submit():
         check_id = Module.query.filter_by(id = form.id.data).first()
         check_title = Module.query.filter_by(title = form.title.data).first()
@@ -186,7 +228,17 @@ def new_mod():
 def new_deadline(module_title):
     form = DeadlineForm()
     mod = Module.query.filter_by(title=module_title).first()
-    user = Student.query.filter_by(stream='EIE').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
+        return redirect(url_for('staff'))
+    else:
+        user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     if form.validate_on_submit():
         # 2 checks: 1. User votes up on another deadline / 2. Deadline already exist and user voted already
         deadline_check1 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,student_id=user.id,vote="Up").all()
@@ -260,7 +312,17 @@ def edit_breakdown(module_title,cw):
 
 @app.route('/staff/<string:module>/<string:cw>/<string:date>/up')
 def staff_upvote_deadline(module,cw,date):
-    user = Lecturer.query.filter_by(id='0425569').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
+    else:
+        user = Lecturer.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     mod = Module.query.filter_by(title=module).first()
     to_change = Deadline.query.filter_by(lecturer=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
@@ -276,7 +338,17 @@ def staff_upvote_deadline(module,cw,date):
 
 @app.route('/staff/<string:module>/<string:cw>/<string:date>/down')
 def staff_downvote_deadline(module,cw,date):
-    user = Lecturer.query.filter_by(id='0425569').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
+    else:
+        user = Lecturer.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     mod = Module.query.filter_by(title=module).first()
     to_change = Deadline.query.filter_by(lecturer=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
@@ -320,7 +392,17 @@ def staff_edit_breakdown(module_title,cw):
 @app.route("/staff/module/new", methods=['GET', 'POST'])
 def new_staff_mod():
     form = ResponsibilityForm()
-    user = Lecturer.query.filter_by(id='0425569').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
+    else:
+        user = Lecturer.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     if form.validate_on_submit():
         check_id = Module.query.filter_by(id = form.id.data).first()
         check_title = Module.query.filter_by(title = form.title.data).first()
@@ -337,7 +419,17 @@ def new_staff_mod():
 
 @app.route('/staff/remove/<string:module>')
 def remove_res(module):
-    user = Lecturer.query.filter_by(id='0425569').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
+    else:
+        user = Lecturer.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     removing = Module.query.filter_by(title=module).first()
     user.module_responsible.remove(removing)
     db.session.commit()
@@ -347,7 +439,17 @@ def remove_res(module):
 def staff_new_deadline(module_title):
     form = DeadlineForm()
     mod = Module.query.filter_by(title=module_title).first()
-    user = Lecturer.query.filter_by(id='0425569').first()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
+    else:
+        user = Lecturer.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     if form.validate_on_submit():
         # 2 checks: 1. User votes up on another deadline / 2. Deadline already exist and user voted already
         deadline_check1 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,lecturer_id=user.id,vote="Up").all()
@@ -367,6 +469,11 @@ def staff_new_deadline(module_title):
 
 @app.route("/staff/edit/<string:module_title>", methods=['GET', 'POST'])
 def staff_edit_mod(module_title):
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
     form = StaffEditForm()
     mod = Module.query.filter_by(title=module_title).first()
     original_id = mod.id
@@ -398,6 +505,11 @@ def staff_edit_mod(module_title):
 
 @app.route("/staff/feedback/<string:module>/<string:cw>", methods=['GET', 'POST'])
 def staff_feedback(module,cw):
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
     mod = Module.query.filter_by(title=module).first()
     feedback_data = (db.session.query(Hours.student_id,Hours.hours,Hours.expected)
     .group_by(Hours.student_id,Hours.hours,Hours.expected)
@@ -417,12 +529,13 @@ def staff():
     if not session['samlUserdata']:
         return redirect(url_for('landing'))
     elif session['access'] == ACCESS['student']:
-        flash(f'Account created for !', 'danger')
+        flash('You do not have access to this page', 'danger')
         return redirect(url_for('home'))
     else:
         user = Lecturer.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
-            return redirect(url_for('landing',message = "User does not exist!"))
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     avail = Module.query.all()
     teacher = user
 
@@ -463,7 +576,6 @@ def staff():
         mod = Module.query.filter_by(id=element[1]).first()
         modname = mod.title
         gta_array = mod.gta_responsible
-        modname = mod.title
         lect_responsible = mod.lecturer_responsible
         lect_deadline = []
         gta_deadline = []
@@ -496,6 +608,14 @@ def staff():
             data.append(True)
         else:
             data.append(False)
+        gta_vote = False
+        if gta_deadline:
+            print(gta_deadline)
+            for outer in gta_deadline:
+                for inner in outer:
+                    if inner.vote =="Up" and inner.date==element[2]:
+                        gta_vote = True
+        data.append(gta_vote)
         if modname in teacher_mod:
             temp = teacher_mod[modname]
             if element[0] in teacher_mod[modname]:
@@ -511,9 +631,19 @@ def staff():
     for element in all_deadlines_else:
         mod = Module.query.filter_by(id=element[1]).first()
         modname = mod.title
-        lect = mod.lecturer_responsible
-        if lect:
-            lect_deadline = Deadline.query.filter_by(lecturer_id=lect.id).all()
+        gta_array = mod.gta_responsible
+        lect_responsible = mod.lecturer_responsible
+        lect_deadline = []
+        gta_deadline = []
+        if gta_array:
+            for gta in gta_array:
+                gta_deadline.append(Deadline.query.filter_by(student_id=gta.id).all())
+        else:
+            gta_deadline = None
+
+        if lect_responsible:
+            for lect in lect_responsible:
+                lect_deadline.append(Deadline.query.filter_by(lecturer_id=lect.id).all())
         else:
             lect_deadline = None
         data = [0] #[Did user vote, Did Lect vote, Is majority?]
@@ -523,13 +653,14 @@ def staff():
                     data[0] = 1
                 elif vote.vote == "Down":
                     data[0] = 2
+        # if lect voted that particular deadline
+        lect_vote = False
         if lect_deadline:
-            if lect_deadline.vote =="Up" and lect_deadline.date==element[2]:
-                data.append(True)
-            else:
-                data.append(False)
-        else:
-            data.append(False)
+            for outer in lect_deadline:
+                for inner in outer:
+                    if inner.vote =="Up" and inner.date==element[2]:
+                        lect_vote = True
+        data.append(lect_vote)
         if element[3] > element[5]/2:
             data.append(True)
         else:
@@ -553,8 +684,6 @@ def staff():
         else:
             all_else_mod[modname] = {element[0]:[[element[2],element[3],element[4],data]]}
 
-        print(teacher.module_responsible[0].content)
-
     return render_template("new_staff.html", teacher_deadlines=teacher_mod, avail_modules = avail, taking = teacher.module_responsible, user=teacher, all_else=all_else_mod, staff=True, hours= no_hours)
 
 
@@ -565,11 +694,13 @@ def home():
     if not session['samlUserdata']:
         return redirect(url_for('landing'))
     elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
         return redirect(url_for('staff'))
     else:
         user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
-            return redirect(url_for('landing',messages = "User does not exist!"))
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
     avail = Module.query.all()
     # Check which modules are taken by the user
     check = [row.id for row in user.module_taken]
@@ -690,7 +821,7 @@ def home():
     # # db.session.commit()
     # print(modules.student_taking)
 
-    return render_template("new_home.html", user_modules=t, avail_modules = avail, taking = user.module_taken, user=user, no_deadline=no_deadline_mod, hours = no_hours)
+    return render_template("new_home.html", user_modules=t, avail_modules = avail, taking = user.module_taken, user=user, no_deadline=no_deadline_mod, hours = no_hours, access = session['access'])
 
 
 
@@ -824,6 +955,8 @@ def attrs():
 
 @app.route('/metadata/')
 def metadata():
+    if session['access'] != ACCESS['admin']:
+        return redirect(url_for('home'))
     req = prepare_flask_request(request)
     auth = init_saml_auth(req)
     settings = auth.get_settings()

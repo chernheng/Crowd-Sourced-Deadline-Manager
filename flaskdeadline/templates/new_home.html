@@ -130,7 +130,15 @@
             <li class="nav-item">
                 <a class="nav-link">
                     <span data-feather="users" class="align-text-bottom"></span>
-                    {{user.name}}
+                    {{user.name}} (
+                      {% if access == 0%}
+                        Student
+                      {% elif access == 1%}
+                        Staff
+                      {% elif access == 2%}
+                        Admin
+                      {% endif%}
+                      )
                 </a>
             </li>
             <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
