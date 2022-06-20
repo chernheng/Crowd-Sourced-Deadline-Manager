@@ -1,13 +1,16 @@
-
 from gettext import npgettext
 from sqlite3 import Date
 from xml.sax.xmlreader import AttributesImpl
 from flask import render_template, url_for, flash, redirect, request, session, make_response
 from flaskdeadline import app, db
-from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, User, ACCESS
-from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm, FeedbackForm, ResponsibilityForm, StaffEditForm, BreakdownForm
+from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, ACCESS
+from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm, FeedbackForm, ResponsibilityForm, StaffEditForm, BreakdownForm, GTAForm, OptimisationForm
 from sqlalchemy import update, func, and_
 from datetime import datetime
+from dateutil.tz import gettz
+from gekko import GEKKO
+import pandas as pd
+from numpy import cumsum
 from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
 from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
 
@@ -17,6 +20,82 @@ VOTE = {
     'Up': 1,
     'Down': 2
 }
+
+def hello(start_end,ects_breakdown):
+    timezone_variable = gettz("Europe/London") 
+    m = GEKKO(remote=True)
+    Z = None
+
+    n = int(len(start_end)/2)
+    no_intervals = len(start_end)-1
+    sorted_dates = start_end.copy()
+    sorted_dates.sort()
+
+    print(sorted_dates)
+    interval_days = [0] * (9)
+    exist = []
+    for i in range(5):
+        exist.append([0]*9)
+    intensity_val = []
+    for i in range(5):
+        intensity_val.append([0]*9)
+    print(interval_days)
+    print(exist)
+    for s in range(no_intervals):
+        interval_days[s] = (sorted_dates[s+1] - sorted_dates[s]).days
+    print("This is it: ",interval_days)
+    for t in range(n):
+        for s in range(no_intervals):
+            if start_end[t*2]<= sorted_dates[s] and sorted_dates[s+1] <= start_end[t*2+1] :
+                exist[t][s] = 1
+    print("Exist: ", exist)
+
+    intensity_val[0][0],intensity_val[0][1],intensity_val[0][2],intensity_val[0][3],intensity_val[0][4],intensity_val[0][5],intensity_val[0][6],intensity_val[0][7],intensity_val[0][8],intensity_val[1][0],intensity_val[1][1],intensity_val[1][2],intensity_val[1][3],intensity_val[1][4],intensity_val[1][5],intensity_val[1][6],intensity_val[1][7],intensity_val[1][8],intensity_val[2][0],intensity_val[2][1],intensity_val[2][2],intensity_val[2][3],intensity_val[2][4],intensity_val[2][5],intensity_val[2][6],intensity_val[2][7],intensity_val[2][8],intensity_val[3][0],intensity_val[3][1],intensity_val[3][2],intensity_val[3][3],intensity_val[3][4],intensity_val[3][5],intensity_val[3][6],intensity_val[3][7],intensity_val[3][8],intensity_val[4][0],intensity_val[4][1],intensity_val[4][2],intensity_val[4][3],intensity_val[4][4],intensity_val[4][5],intensity_val[4][6],intensity_val[4][7],intensity_val[4][8],Z = m.Array(m.Var,46)
+
+
+    m.Minimize(Z)
+
+    m.Equation([exist[0][0]*interval_days[0]*intensity_val[0][0]+exist[0][1]*interval_days[1]*intensity_val[0][1]+exist[0][2]*interval_days[2]*intensity_val[0][2]+exist[0][3]*interval_days[3]*intensity_val[0][3]+exist[0][4]*interval_days[4]*intensity_val[0][4]+exist[0][5]*interval_days[5]*intensity_val[0][5]+exist[0][6]*interval_days[6]*intensity_val[0][6]+exist[0][7]*interval_days[7]*intensity_val[0][7]+exist[0][8]*interval_days[8]*intensity_val[0][8]==ects_breakdown[0],
+                exist[1][0]*interval_days[0]*intensity_val[1][0]+exist[1][1]*interval_days[1]*intensity_val[1][1]+exist[1][2]*interval_days[2]*intensity_val[1][2]+exist[1][3]*interval_days[3]*intensity_val[1][3]+exist[1][4]*interval_days[4]*intensity_val[1][4]+exist[1][5]*interval_days[5]*intensity_val[1][5]+exist[1][6]*interval_days[6]*intensity_val[1][6]+exist[1][7]*interval_days[7]*intensity_val[1][7]+exist[1][8]*interval_days[8]*intensity_val[1][8]==ects_breakdown[1],
+                exist[2][0]*interval_days[0]*intensity_val[2][0]+exist[2][1]*interval_days[1]*intensity_val[2][1]+exist[2][2]*interval_days[2]*intensity_val[2][2]+exist[2][3]*interval_days[3]*intensity_val[2][3]+exist[2][4]*interval_days[4]*intensity_val[2][4]+exist[2][5]*interval_days[5]*intensity_val[2][5]+exist[2][6]*interval_days[6]*intensity_val[2][6]+exist[2][7]*interval_days[7]*intensity_val[2][7]+exist[2][8]*interval_days[8]*intensity_val[2][8]==ects_breakdown[2],
+                exist[3][0]*interval_days[0]*intensity_val[3][0]+exist[3][1]*interval_days[1]*intensity_val[3][1]+exist[3][2]*interval_days[2]*intensity_val[3][2]+exist[3][3]*interval_days[3]*intensity_val[3][3]+exist[3][4]*interval_days[4]*intensity_val[3][4]+exist[3][5]*interval_days[5]*intensity_val[3][5]+exist[3][6]*interval_days[6]*intensity_val[3][6]+exist[3][7]*interval_days[7]*intensity_val[3][7]+exist[3][8]*interval_days[8]*intensity_val[3][8]==ects_breakdown[3],
+                exist[4][0]*interval_days[0]*intensity_val[4][0]+exist[4][1]*interval_days[1]*intensity_val[4][1]+exist[4][2]*interval_days[2]*intensity_val[4][2]+exist[4][3]*interval_days[3]*intensity_val[4][3]+exist[4][4]*interval_days[4]*intensity_val[4][4]+exist[4][5]*interval_days[5]*intensity_val[4][5]+exist[4][6]*interval_days[6]*intensity_val[4][6]+exist[4][7]*interval_days[7]*intensity_val[4][7]+exist[4][8]*interval_days[8]*intensity_val[4][8]==ects_breakdown[4]])
+
+
+    m.Equations([Z>=exist[0][0]*intensity_val[0][0]+exist[1][0]*intensity_val[1][0]+exist[2][0]*intensity_val[2][0]+exist[3][0]*intensity_val[3][0]+exist[4][0]*intensity_val[4][0],
+                Z>=exist[0][1]*intensity_val[0][1]+exist[1][1]*intensity_val[1][1]+exist[2][1]*intensity_val[2][1]+exist[3][1]*intensity_val[3][1]+exist[4][1]*intensity_val[4][1],
+                Z>=exist[0][2]*intensity_val[0][2]+exist[1][2]*intensity_val[1][2]+exist[2][2]*intensity_val[2][2]+exist[3][2]*intensity_val[3][2]+exist[4][2]*intensity_val[4][2],
+                Z>=exist[0][3]*intensity_val[0][3]+exist[1][3]*intensity_val[1][3]+exist[2][3]*intensity_val[2][3]+exist[3][3]*intensity_val[3][3]+exist[4][3]*intensity_val[4][3],
+                Z>=exist[0][4]*intensity_val[0][4]+exist[1][4]*intensity_val[1][4]+exist[2][4]*intensity_val[2][4]+exist[3][4]*intensity_val[3][4]+exist[4][4]*intensity_val[4][4],
+                Z>=exist[0][5]*intensity_val[0][5]+exist[1][5]*intensity_val[1][5]+exist[2][5]*intensity_val[2][5]+exist[3][5]*intensity_val[3][5]+exist[4][5]*intensity_val[4][5],
+                Z>=exist[0][6]*intensity_val[0][6]+exist[1][6]*intensity_val[1][6]+exist[2][6]*intensity_val[2][6]+exist[3][6]*intensity_val[3][6]+exist[4][6]*intensity_val[4][6],
+                Z>=exist[0][7]*intensity_val[0][7]+exist[1][7]*intensity_val[1][7]+exist[2][7]*intensity_val[2][7]+exist[3][7]*intensity_val[3][7]+exist[4][7]*intensity_val[4][7],
+                Z>=exist[0][8]*intensity_val[0][8]+exist[1][8]*intensity_val[1][8]+exist[2][8]*intensity_val[2][8]+exist[3][8]*intensity_val[3][8]+exist[4][8]*intensity_val[4][8],intensity_val[0][0]>=0,intensity_val[0][1]>=0,intensity_val[0][2]>=0,intensity_val[0][3]>=0,intensity_val[0][4]>=0,intensity_val[0][5]>=0,intensity_val[0][6]>=0,intensity_val[0][7]>=0,intensity_val[0][8]>=0,intensity_val[1][0]>=0,intensity_val[1][1]>=0,intensity_val[1][2]>=0,intensity_val[1][3]>=0,intensity_val[1][4]>=0,intensity_val[1][5]>=0,intensity_val[1][6]>=0,intensity_val[1][7]>=0,intensity_val[1][8]>=0,intensity_val[2][0]>=0,intensity_val[2][1]>=0,intensity_val[2][2]>=0,intensity_val[2][3]>=0,intensity_val[2][4]>=0,intensity_val[2][5]>=0,intensity_val[2][6]>=0,intensity_val[2][7]>=0,intensity_val[2][8]>=0,intensity_val[3][0]>=0,intensity_val[3][1]>=0,intensity_val[3][2]>=0,intensity_val[3][3]>=0,intensity_val[3][4]>=0,intensity_val[3][5]>=0,intensity_val[3][6]>=0,intensity_val[3][7]>=0,intensity_val[3][8]>=0,intensity_val[4][0]>=0,intensity_val[4][1]>=0,intensity_val[4][2]>=0,intensity_val[4][3]>=0,intensity_val[4][4]>=0,intensity_val[4][5]>=0,intensity_val[4][6]>=0,intensity_val[4][7]>=0,intensity_val[4][8]>=0])
+    m.solve()
+    print(intensity_val)
+    print(intensity_val[0][0].value[0])
+    print(Z.value[0])
+    print(Z)
+
+    # Creating data for graph
+    date_range = pd.date_range(start=sorted_dates[0], end = sorted_dates[-1]).to_pydatetime().tolist()
+    date_range = [i.strftime("%d/%m/%Y") for i in date_range]
+    print(date_range)
+    range_index = cumsum(interval_days)
+    for i in range_index:
+        print(date_range[i])
+    print(cumsum(interval_days))
+    date_intensity = []
+    for i in intensity_val: # for each coursework
+        temp = [i[0].value[0]]
+        for j in range(no_intervals):
+            for k in range(interval_days[j]):
+                temp.append(i[j].value[0])
+        date_intensity.append(temp)
+
+    print(date_intensity)
+    return (date_intensity,date_range)
+
 @app.route("/teststaff")
 def test():
     session['id'] = 'jbarria'
@@ -69,12 +148,6 @@ def login():
     else:
         print("Not logged in")
         return redirect(url_for('landing'))
-    # user = Student.query.filter_by(stream='EIE').first()
-    # mod = Module.query.filter_by(id='ELEC60006').first()
-    # mod.gta_responsible.append(user)
-    # db.session.commit()
-    # print(user.module_gta)
-    # print(login_info)
 
     return redirect(url_for('home'))
 
@@ -92,14 +165,14 @@ def upvote_deadline(module,cw,date):
             flash('User does not exist!', 'danger')
             return redirect(url_for('landing'))
     mod = Module.query.filter_by(title=module).first()
-    to_change = Deadline.query.filter_by(student=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
+    to_change = Deadline.query.filter_by(student=user,module=mod,lecturer_id = '',coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
         if to_change.vote == "Up":
             to_change.vote = "Neutral"
         else:
             to_change.vote="Up"
     else:
-        insert = Deadline(student_id = user.id, module_id=mod.id,coursework_id=cw,date=datetime.strptime(date, '%Y-%m-%d %H:%M:%S'),vote="Up")
+        insert = Deadline(student_id = user.id, module_id=mod.id,lecturer_id = '',coursework_id=cw,date=datetime.strptime(date, '%Y-%m-%d %H:%M:%S'),vote="Up")
         db.session.add(insert)
     db.session.commit()
     return redirect(url_for('home'))
@@ -118,7 +191,7 @@ def downvote_deadline(module,cw,date):
             flash('User does not exist!', 'danger')
             return redirect(url_for('landing'))
     mod = Module.query.filter_by(title=module).first()
-    to_change = Deadline.query.filter_by(student=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
+    to_change = Deadline.query.filter_by(student=user,lecturer_id='',module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
         if to_change.vote == "Down":
             to_change.vote = "Neutral"
@@ -215,7 +288,7 @@ def new_mod():
             flash('Module already exists', 'danger')
         else:
             module = Module(id = form.id.data, title = form.title.data,ects=form.ects.data)
-            cw = Coursework(title = form.coursework_title.data, module_id = form.id.data, breakdown = 10)
+            cw = Coursework(title = form.coursework_title.data, module_id = form.id.data, breakdown = form.breakdown.data, start_date = form.start_date.data)
             deadline = Deadline(coursework_id = form.coursework_title.data, student_id = user.id, module_id =form.id.data,lecturer_id = '', date = form.date.data, vote = "Up")
             db.session.add_all([module,cw,deadline])
             db.session.commit()
@@ -245,7 +318,7 @@ def new_deadline(module_title):
         deadline_check2 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,student_id=user.id, date = form.date.data).first()
         cw_check = Coursework.query.filter_by(module_id=form.id.data,title =form.coursework_title.data).first()
         if not cw_check:
-            cw = Coursework(title = form.coursework_title.data, module_id =form.id.data, breakdown = form.breakdown.data)
+            cw = Coursework(title = form.coursework_title.data, module_id =form.id.data, breakdown = form.breakdown.data, start_date = form.start_date.data)
             db.session.add(cw)
         # If user already subscribe to a deadline
         if deadline_check1:
@@ -263,6 +336,11 @@ def new_deadline(module_title):
 @app.route("/edit/<string:module_title>", methods=['GET', 'POST'])
 def edit_mod(module_title):
     form = EditForm()
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
+        return redirect(url_for('staff'))
     mod = Module.query.filter_by(title=module_title).first()
     original_id = mod.id
     original_title = mod.title
@@ -294,8 +372,14 @@ def edit_mod(module_title):
 @app.route("/breakdown/<string:module_title>/<string:cw>", methods=['GET', 'POST'])
 def edit_breakdown(module_title,cw):
     form = BreakdownForm()
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
+        return redirect(url_for('staff'))
     mod = Module.query.filter_by(title=module_title).first()
     cwk = Coursework.query.filter_by(title=cw,module_id = mod.id).first()
+    print(cwk.start_date)
     original_title = cwk.title
     if form.validate_on_submit():
         if original_title != form.coursework_title.data:
@@ -306,6 +390,7 @@ def edit_breakdown(module_title,cw):
             db.session.execute(stmt)
             db.session.execute(stmt2)
         cwk.breakdown = form.breakdown.data
+        cwk.start_date = form.start_date.data
         db.session.commit()
         return redirect(url_for('home'))
     return render_template('edit_breakdown.html', form=form, cwk=cwk)
@@ -364,14 +449,29 @@ def staff_downvote_deadline(module,cw,date):
 
 @app.route("/staff/gta/<string:module_title>", methods=['GET', 'POST'])
 def staff_gta_assignment(module_title):
-    form = BreakdownForm()
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
+    form = GTAForm()
     mod = Module.query.filter_by(title=module_title).first()
     if form.validate_on_submit():
+        data = form.gta.data.split(" - ")
+        gta = Student.query.filter_by(id=data[0]).first()
+        mod.gta_responsible.append(gta)
+        db.session.commit()
+        print(mod.gta_responsible)
         return redirect(url_for('staff'))
-    return render_template('edit_breakdown.html', form=form, staff=True)
+    return render_template('gta.html', form=form, mod=mod ,staff=True)
 
 @app.route("/staff/breakdown/<string:module_title>/<string:cw>", methods=['GET', 'POST'])
 def staff_edit_breakdown(module_title,cw):
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
     form = BreakdownForm()
     mod = Module.query.filter_by(title=module_title).first()
     cwk = Coursework.query.filter_by(title=cw,module_id = mod.id).first()
@@ -384,6 +484,7 @@ def staff_edit_breakdown(module_title,cw):
             stmt2 = update(Hours).where(and_(Hours.coursework_title==original_title, Hours.module_id==mod.id)).values(coursework_title=form.coursework_title.data).execution_options(synchronize_session="fetch")
             db.session.execute(stmt)
             db.session.execute(stmt2)
+        cwk.start_date = form.start_date.data
         cwk.breakdown = form.breakdown.data
         db.session.commit()
         return redirect(url_for('staff'))
@@ -413,6 +514,21 @@ def new_staff_mod():
         else:
             module = Module(id = form.id.data, title = form.title.data, ects = form.ects.data)
             user.module_responsible.append(module)
+        check_cw = Coursework.query.filter_by(title = form.coursework_title.data, module_id = form.id.data).first()
+        check_deadline = Deadline.query.filter_by(coursework_id = form.coursework_title.data, lecturer_id = user.id, module_id =form.id.data).first()
+        if check_cw:
+            check_cw.title = form.coursework_title.data
+            check_cw.breakdown  = form.breakdown.data
+            check_cw.start_date = form.start_date.data
+        else:
+            cw = Coursework(title = form.coursework_title.data, module_id = form.id.data, breakdown = form.breakdown.data, start_date = form.start_date.data)
+            db.session.add(cw)
+        if check_deadline:
+            check_deadline.date = form.date.data
+            check_deadline.vote = "Up"
+        else:
+            deadline = Deadline(coursework_id = form.coursework_title.data, lecturer_id = user.id, module_id =form.id.data,student_id = '', date = form.date.data, vote = "Up")
+            db.session.add(deadline)
         db.session.commit()
         return redirect(url_for('staff'))
     return render_template('staff_mod.html', form=form, staff=True)
@@ -454,6 +570,10 @@ def staff_new_deadline(module_title):
         # 2 checks: 1. User votes up on another deadline / 2. Deadline already exist and user voted already
         deadline_check1 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,lecturer_id=user.id,vote="Up").all()
         deadline_check2 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,lecturer_id=user.id, date = form.date.data).first()
+        cw_check = Coursework.query.filter_by(module_id=form.id.data,title =form.coursework_title.data).first()
+        if not cw_check:
+            cw = Coursework(title = form.coursework_title.data, module_id =form.id.data, breakdown = form.breakdown.data, start_date = form.start_date.data)
+            db.session.add(cw)
         # If user already subscribe to a deadline
         if deadline_check1:
             for element in deadline_check1:
@@ -523,6 +643,163 @@ def staff_feedback(module,cw):
             feedback_data[i] = (feedback_data[i][0],feedback_data[i][1], "More Than Expected")
     return render_template('staff_hours_data.html', attributes= feedback_data, staff= True)
 
+
+@app.route('/intensity', methods=['GET', 'POST'])
+def intensity():
+    form = OptimisationForm()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['student']:
+        flash('You do not have access to this page', 'danger')
+        return redirect(url_for('home'))
+    else:
+        user = Lecturer.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
+    avail = Module.query.all()
+    teacher = user
+    data = None
+    label = None
+    if form.validate_on_submit():
+        cwk_list = []
+        if form.c1.data != "---":
+            data = form.c1.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+        if form.c2.data != "---":
+            data = form.c2.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+        if form.c3.data != "---":
+            data = form.c3.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+        if form.c4.data != "---":
+            data = form.c4.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+        if form.c5.data != "---":
+            data = form.c5.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+        print(cwk_list)
+        print("Waht the hell")
+        ects_breakdown = []
+        start_end_dates =[]
+        for i in cwk_list:
+            mod = Module.query.filter_by(title=i[0]).first()
+            cw = Coursework.query.filter_by(title=i[1],module_id = mod.id).first()
+            deadline = Deadline.query.filter_by(coursework_id=i[1], module_id = mod.id, vote = "Up").first()
+            ects_breakdown.append(cw.breakdown*mod.ects)
+            start_end_dates.append(cw.start_date.date())
+            start_end_dates.append(deadline.date.date())
+        if len(ects_breakdown)!=5:
+            ects_breakdown = ects_breakdown + [0]*(5-len(ects_breakdown))
+        data,label = hello(start_end_dates,ects_breakdown)
+        print(ects_breakdown)
+        print(start_end_dates)
+
+    # label = [datetime(2022, 5, 4,15).strftime("%d/%m/%Y"), datetime(2022, 5, 6).date().strftime("%d/%m/%Y"), 
+    #         datetime(2022, 5, 12,15).strftime("%d/%m/%Y"), datetime(2022, 5, 18).date().strftime("%d/%m/%Y"),
+    #         datetime(2022, 5, 14).date().strftime("%d/%m/%Y"), datetime(2022, 5, 20).date().strftime("%d/%m/%Y")]
+    # print(intensity_val)
+    # print(intensity_val[0][0].value[0])
+    # print(Z.value[0])
+    # print(Z)
+
+    # # Creating data for graph
+    # date_range = pd.date_range(start=sorted_dates[0], end = sorted_dates[-1]).to_pydatetime().tolist()
+    # print(date_range)
+    # range_index = cumsum(interval_days)
+    # for i in range_index:
+    #     print(date_range[i])
+    # print(cumsum(interval_days))
+    # date_intensity = []
+    # for i in intensity_val: # for each coursework
+    #     temp = [i[0].value[0]]
+    #     for j in range(no_intervals):
+    #         for k in range(interval_days[j]):
+    #             temp.append(i[j].value[0])
+    #     date_intensity.append(temp)
+
+    # print(date_intensity)
+
+    return render_template("lin_opt.html",  avail_modules = avail,form = form, taking = teacher.module_responsible, user=teacher, label=label,date=data)
+
+def deadline_data(deadline_array, deadlines_voted):
+    '''
+    Aimed to extract the data in this form:
+    {'Communication Networks': 
+        {'Coursework 1': [[datetime.datetime(2022, 6, 18, 12, 0), 2, 0, [1, False, True]], [datetime.datetime(2022, 6, 19, 12, 0), 1, 0, [0, False, True]]], 
+         'Coursework 2': [[datetime.datetime(2022, 6, 20, 12, 0), 0, 1, [0, False, False]]]}}
+    Title of module as the key for a dict, and the output is another dict with the coursework title as the key
+    The output of the nest dict is an array of array, with each element of the outer array being data corresponding to 1 deadline.
+    Each element of the inner array is as follow:
+        [date, upvotes, downvotes, [What user voted for: 1 -> up, 2-> down, 0 -> neutral], Did Lect responsible vote?, Is this the majority?, Did GTA vote?]]
+    '''
+    return_array = {}
+    
+    for element in deadline_array:
+        mod = Module.query.filter_by(id=element[1]).first()
+        modname = mod.title
+        gta_array = mod.gta_responsible
+        lect_responsible = mod.lecturer_responsible
+        lect_deadline = []
+        gta_deadline = []
+        if gta_array:
+            for gta in gta_array:
+                gta_deadline.append(Deadline.query.filter_by(student_id=gta.id).all())
+        else:
+            gta_deadline = None
+
+        if lect_responsible:
+            for lect in lect_responsible:
+                lect_deadline.append(Deadline.query.filter_by(lecturer_id=lect.id).all())
+        else:
+            lect_deadline = None
+        data = [0] #[Did user vote, Did Lect vote, Is majority?]    
+        for vote in deadlines_voted:
+            if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
+                if vote.vote == "Up":
+                    data[0] = VOTE['Up']
+                elif vote.vote == "Down":
+                    data[0] = VOTE['Down']
+        # Majority of staff must agree on same deadline
+        lect_vote = False
+        lect_count = 0
+        if lect_deadline:
+            for outer in lect_deadline:
+                for inner in outer:
+                    if inner.vote =="Up" and inner.date==element[2]:
+                        lect_count = lect_count + 1
+            if lect_count > len(lect_deadline)/2:
+                lect_vote = True
+        data.append(lect_vote)
+        if element[3] > element[5]/2:
+            data.append(True)
+        else:
+            data.append(False)
+        # >50% of gta that voted must vote on same deadline
+        gta_vote = False
+        gta_count = 0
+        if gta_deadline:
+            for outer in gta_deadline:
+                for inner in outer:
+                    if inner.vote =="Up" and inner.date==element[2]:
+                        gta_count = gta_count +1
+            if gta_count > len(gta_deadline)/2:
+                gta_vote = True
+        data.append(gta_vote)
+        if modname in return_array:
+            temp = return_array[modname]
+            if element[0] in return_array[modname]:
+                temp = return_array[modname][element[0]]
+                temp.append([element[2],element[3],element[4],data])
+                return_array[modname][element[0]] = temp
+            else:
+                return_array[modname][element[0]] = [[element[2],element[3],element[4],data]]
+        else:
+            return_array[modname] = {element[0]:[[element[2],element[3],element[4],data]]}
+    return return_array
+
+
 @app.route('/staff')
 def staff():
     user = None
@@ -570,119 +847,11 @@ def staff():
             no_hours[cw.module.title] = {cw.title:(avg_hrs[0][0],count[0][0])}
     print(no_hours)
 
-    teacher_mod = {}
+    teacher_mod = deadline_data(all_deadlines_subscribed,deadlines_voted)
     
-    for element in all_deadlines_subscribed:
-        mod = Module.query.filter_by(id=element[1]).first()
-        modname = mod.title
-        gta_array = mod.gta_responsible
-        lect_responsible = mod.lecturer_responsible
-        lect_deadline = []
-        gta_deadline = []
-        if gta_array:
-            for gta in gta_array:
-                gta_deadline.append(Deadline.query.filter_by(student_id=gta.id).all())
-        else:
-            gta_deadline = None
-
-        if lect_responsible:
-            for lect in lect_responsible:
-                lect_deadline.append(Deadline.query.filter_by(lecturer_id=lect.id).all())
-        else:
-            lect_deadline = None
-        data = [0] #[Did user vote, Did Lect vote, Is majority?]    
-        for vote in deadlines_voted:
-            if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
-                if vote.vote == "Up":
-                    data[0] = 1
-                elif vote.vote == "Down":
-                    data[0] = 2
-        lect_vote = False
-        if lect_deadline:
-            for outer in lect_deadline:
-                for inner in outer:
-                    if inner.vote =="Up" and inner.date==element[2]:
-                        lect_vote = True
-        data.append(lect_vote)
-        if element[3] > element[5]/2:
-            data.append(True)
-        else:
-            data.append(False)
-        gta_vote = False
-        if gta_deadline:
-            print(gta_deadline)
-            for outer in gta_deadline:
-                for inner in outer:
-                    if inner.vote =="Up" and inner.date==element[2]:
-                        gta_vote = True
-        data.append(gta_vote)
-        if modname in teacher_mod:
-            temp = teacher_mod[modname]
-            if element[0] in teacher_mod[modname]:
-                temp = teacher_mod[modname][element[0]]
-                temp.append([element[2],element[3],element[4],data])
-                teacher_mod[modname][element[0]] = temp
-            else:
-                teacher_mod[modname][element[0]] = [[element[2],element[3],element[4],data]]
-        else:
-            teacher_mod[modname] = {element[0]:[[element[2],element[3],element[4],data]]}
     
-    all_else_mod = {}
-    for element in all_deadlines_else:
-        mod = Module.query.filter_by(id=element[1]).first()
-        modname = mod.title
-        gta_array = mod.gta_responsible
-        lect_responsible = mod.lecturer_responsible
-        lect_deadline = []
-        gta_deadline = []
-        if gta_array:
-            for gta in gta_array:
-                gta_deadline.append(Deadline.query.filter_by(student_id=gta.id).all())
-        else:
-            gta_deadline = None
-
-        if lect_responsible:
-            for lect in lect_responsible:
-                lect_deadline.append(Deadline.query.filter_by(lecturer_id=lect.id).all())
-        else:
-            lect_deadline = None
-        data = [0] #[Did user vote, Did Lect vote, Is majority?]
-        for vote in deadlines_voted:
-            if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
-                if vote.vote == "Up":
-                    data[0] = 1
-                elif vote.vote == "Down":
-                    data[0] = 2
-        # if lect voted that particular deadline
-        lect_vote = False
-        if lect_deadline:
-            for outer in lect_deadline:
-                for inner in outer:
-                    if inner.vote =="Up" and inner.date==element[2]:
-                        lect_vote = True
-        data.append(lect_vote)
-        if element[3] > element[5]/2:
-            data.append(True)
-        else:
-            data.append(False)
-        gta_vote = False
-        if gta_deadline:
-            print(gta_deadline)
-            for outer in gta_deadline:
-                for inner in outer:
-                    if inner.vote =="Up" and inner.date==element[2]:
-                        gta_vote = True
-        data.append(gta_vote)
-        if modname in all_else_mod:
-            temp = all_else_mod[modname]
-            if element[0] in all_else_mod[modname]:
-                temp = all_else_mod[modname][element[0]]
-                temp.append([element[2],element[3],element[4],data])
-                all_else_mod[modname][element[0]] = temp
-            else:
-                all_else_mod[modname][element[0]] = [[element[2],element[3],element[4],data]]
-        else:
-            all_else_mod[modname] = {element[0]:[[element[2],element[3],element[4],data]]}
+    all_else_mod = deadline_data(all_deadlines_else,deadlines_voted)
+    
 
     return render_template("new_staff.html", teacher_deadlines=teacher_mod, avail_modules = avail, taking = teacher.module_responsible, user=teacher, all_else=all_else_mod, staff=True, hours= no_hours)
 
@@ -712,9 +881,6 @@ def home():
         if row.module_vote == []:
             no_deadline_mod.append(row)
     print(no_deadline_mod)
-    # deadline = Deadline.query.filter(Deadline.module_id.in_(check)).all()
-    # unique = db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date).\
-    # group_by(Deadline.coursework_id,Deadline.module_id,Deadline.date).all()
 
     # Deadlines that student voted for
     deadlines_voted = Deadline.query.filter_by(student=user).all()
@@ -741,87 +907,9 @@ def home():
         else:
             no_hours[cw.module.title] = {cw.title:(avg_hrs[0][0],count[0][0])}
     print(no_hours)
-    t = {}
-    '''
-    Aimed to extract the data in this form:
-    {'Communication Networks': 
-        {'Coursework 1': [[datetime.datetime(2022, 6, 18, 12, 0), 2, 0, [1, False, True]], [datetime.datetime(2022, 6, 19, 12, 0), 1, 0, [0, False, True]]], 
-         'Coursework 2': [[datetime.datetime(2022, 6, 20, 12, 0), 0, 1, [0, False, False]]]}}
-    Title of module as the key for a dict, and the output is another dict with the coursework title as the key
-    The output of the nest dict is an array of array, with each element of the outer array being data corresponding to 1 deadline.
-    Each element of the inner array is as follow:
-        [date, upvotes, downvotes, [What user voted for: 1 -> up, 2-> down, 0 -> neutral], Did Lect responsible vote?, Is this the majority?, Did GTA vote?]]
-    '''
-    for element in all_deadlines_subscribed:
-        mod = Module.query.filter_by(id=element[1]).first()
-        gta_array = mod.gta_responsible
-        modname = mod.title
-        lect_responsible = mod.lecturer_responsible
-        lect_deadline = []
-        gta_deadline = []
-        if gta_array:
-            for gta in gta_array:
-                gta_deadline.append(Deadline.query.filter_by(student_id=gta.id).all())
-        else:
-            gta_deadline = None
-
-        if lect_responsible:
-            for lect in lect_responsible:
-                lect_deadline.append(Deadline.query.filter_by(lecturer_id=lect.id).all())
-        else:
-            lect_deadline = None
-        data = [0] #[Did user vote, Did Lect vote, Is majority?]
-        # What user voted
-        for vote in deadlines_voted:
-            if vote.module_id == element[1] and vote.date == element[2] and vote.coursework_id == element[0]:
-                if vote.vote == "Up":
-                    data[0] = VOTE['Up']
-                elif vote.vote == "Down":
-                    data[0] = VOTE['Down']
-        # if lect voted that particular deadline
-        lect_vote = False
-        if lect_deadline:
-            for outer in lect_deadline:
-                for inner in outer:
-                    if inner.vote =="Up" and inner.date==element[2]:
-                        lect_vote = True
-        data.append(lect_vote)
-        if element[3] > element[5]/2:
-            data.append(True)
-        else:
-            data.append(False)
-        gta_vote = False
-        if gta_deadline:
-            print(gta_deadline)
-            for outer in gta_deadline:
-                for inner in outer:
-                    if inner.vote =="Up" and inner.date==element[2]:
-                        gta_vote = True
-        data.append(gta_vote)
-        if modname in t:
-            temp = t[modname]
-            if element[0] in t[modname]:
-                temp = t[modname][element[0]]
-                temp.append([element[2],element[3],element[4],data])
-                t[modname][element[0]] = temp
-            else:
-                t[modname][element[0]] = [[element[2],element[3],element[4],data]]
-        else:
-            t[modname] = {element[0]:[[element[2],element[3],element[4],data]]}
+    student_deadline = deadline_data(all_deadlines_subscribed,deadlines_voted)
     
-    print(t)
-    # print(unique)
-    # print(deadline)
-    # print(user)
-    # print(user.module_taken)
-
-    # # deadline = Deadline.query.filter_by()
-    # # student.module_taken.append(modules)
-    # # student.module_taken.remove(modules)
-    # # db.session.commit()
-    # print(modules.student_taking)
-
-    return render_template("new_home.html", user_modules=t, avail_modules = avail, taking = user.module_taken, user=user, no_deadline=no_deadline_mod, hours = no_hours, access = session['access'])
+    return render_template("new_home.html", user_modules=student_deadline, avail_modules = avail, taking = user.module_taken, user=user, no_deadline=no_deadline_mod, hours = no_hours, access = session['access'])
 
 
 

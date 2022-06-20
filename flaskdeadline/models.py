@@ -79,6 +79,7 @@ class Coursework(db.Model):
     title = db.Column(db.String(100), nullable=False)
     module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False)
     breakdown = db.Column(db.Integer, nullable=False)
+    start_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     __table_args__ = (db.UniqueConstraint(title, module_id),)
     module = db.relationship("Module", backref="module_cw",lazy='subquery')
 
@@ -94,17 +95,3 @@ class Lecturer(db.Model):
 
     def __repr__(self):
         return f"Lecturer('{self.id}', '{self.name}')"
-
-class User():
-    def __init__(self, data, access=ACCESS['student']):
-        self.data = data
-        self.access = access
-    
-    def is_admin(self):
-        return self.access == ACCESS['admin']
-    
-    def is_staff(self):
-        return self.access == ACCESS['staff']
-    
-    def allowed(self, access_level):
-        return self.access >= access_level

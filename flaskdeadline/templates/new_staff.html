@@ -15,7 +15,7 @@
                 <div class="btn-group ml-2">
                 <a type="button" class="btn btn-sm btn-outline-secondary" href="/staff/deadline/new/{{title}}">Add new deadline</a>
                 <a type="button" class="btn btn-sm btn-outline-secondary" href="/staff/edit/{{title}}">Edit Module Details</a>
-                <a type="button" class="btn btn-sm btn-outline-secondary" href="/staff/edit/{{title}}">Assign GTA</a>
+                <a type="button" class="btn btn-sm btn-outline-secondary" href="/staff/gta/{{title}}">Assign GTA</a>
                 </div>
             </div>
             </div>
@@ -59,15 +59,16 @@
             </h6>
             {% endfor %}
             </div>
-            {%for module in taking%}
             <div class = "col-lg d-flex mb-1 mt-1">
+            {%for module in taking%}
                 {%for cwk in module.module_cw%}
-                  {%if cwk.title == cw%}
+                  {%if cwk.title == cw and cwk.module.title == title%}
                     <h6 class="detail-content"><u>Details of Module:</u><br>Worth <a href='/staff/breakdown/{{title}}/{{cw}}'>{{cwk.breakdown}}%</a> of Module<br>{{module.content}}</h6>
                   {%endif%}
                 {%endfor%}
-              </div>
+              
             {%endfor%}
+        </div>
 
         </div>
         </div>

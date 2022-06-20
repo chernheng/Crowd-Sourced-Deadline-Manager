@@ -12,7 +12,7 @@
             <form method="POST" action="">
                 {{ form.hidden_tag() }}
                 <fieldset class="form-group">
-                    <legend class="border-bottom mb-4">Edit Coursework Breakdown</legend>
+                    <legend class="border-bottom mb-4">Edit Coursework Details</legend>
                     <div class="form-group mb-4">
                         {{ form.title.label(class="form-control-label") }}
                         {{ form.title(class="form-control form-control-lg" ,value = cwk.module.title) }}
@@ -42,6 +42,20 @@
                         {% else %}
                             {{ form.breakdown(class="form-control form-control-lg") }}
                         {% endif %}
+                    </div>
+                    <div class="form-group mb-4">
+                        {{ form.start_date.label(class="form-control-label") }}
+                        {% if form.start_date.errors %}
+                            {{ form.start_date(class="form-control form-control-lg is-invalid",type="datetime-local",value = cwk.start_date.strftime('%Y-%m-%dT%H:%M')) }}
+                            <div class="invalid-feedback">
+                                {% for error in form.start_date.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.start_date(class="form-control form-control-lg",type="datetime-local",value = cwk.start_date.strftime('%Y-%m-%dT%H:%M')) }}
+                        {% endif %}
+                        
                     </div>
                 </fieldset>
                 <div class="form-group mb-4">

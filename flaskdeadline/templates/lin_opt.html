@@ -1,0 +1,183 @@
+{% extends "new_layout.html" %}
+{%block header%}
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-3 border-bottom">
+      </div>
+
+
+{%endblock header%}
+
+{% block content %}
+<main role="main" class="container">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="content-section">
+          <form method="POST" action="">
+              {{ form.hidden_tag() }}
+              <fieldset class="form-group">
+                  <legend class="border-bottom mb-4">Select Modules to Compare</legend>
+                  <div class="form-group mb-4">
+                      {{ form.c1.label(class="form-control-label") }}
+                      {% if form.c1.errors %}
+                          {{ form.c1(class="form-control form-control-lg is-invalid") }}
+                          <div class="invalid-feedback">
+                              {% for error in form.c1.errors %}
+                                  <span>{{ error }}</span>
+                              {% endfor %}
+                          </div>
+                      {% else %}
+                          {{ form.c1(class="form-control form-control-lg") }}
+                      {% endif %}
+                  </div>
+                  <div class="form-group mb-4">
+                    {{ form.c2.label(class="form-control-label") }}
+                    {% if form.c2.errors %}
+                        {{ form.c2(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.c2.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.c2(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="form-group mb-4">
+                  {{ form.c3.label(class="form-control-label") }}
+                  {% if form.c3.errors %}
+                      {{ form.c3(class="form-control form-control-lg is-invalid") }}
+                      <div class="invalid-feedback">
+                          {% for error in form.c3.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                      </div>
+                  {% else %}
+                      {{ form.c3(class="form-control form-control-lg") }}
+                  {% endif %}
+              </div>
+              <div class="form-group mb-4">
+                {{ form.c4.label(class="form-control-label") }}
+                {% if form.c4.errors %}
+                    {{ form.c4(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.c4.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.c4(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+            <div class="form-group mb-4">
+              {{ form.c5.label(class="form-control-label") }}
+              {% if form.c5.errors %}
+                  {{ form.c5(class="form-control form-control-lg is-invalid") }}
+                  <div class="invalid-feedback">
+                      {% for error in form.c5.errors %}
+                          <span>{{ error }}</span>
+                      {% endfor %}
+                  </div>
+              {% else %}
+                  {{ form.c5(class="form-control form-control-lg") }}
+              {% endif %}
+          </div>
+              </fieldset>
+              <div class="form-group mb-4">
+                  {{ form.submit(class="btn btn-outline-info") }}
+              </div>
+          </form>
+      </div>
+  </div>
+</div>
+</main>
+ 
+
+{%endblock content%}
+
+
+{% block mods %}
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+        <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link">
+                    <span data-feather="users" class="align-text-bottom"></span>
+                    {{user.name}}
+                </a>
+            </li>
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                <span>Responsible For:</span>
+                <a class="link-secondary" href="{{url_for('new_staff_mod')}}" aria-label="Add a new mdoule">
+                    <span data-feather="plus-circle" class="align-text-bottom"></span>
+                  </a>
+              </h6>
+            {%for module in taking%}
+                <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="/staff/remove/{{module.title}}">
+                <span data-feather="book-open" class="align-text-bottom"></span>
+                    {{module.id}} - {{module.title}}
+                </a>
+                </li>
+            {% endfor %}
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                <span>Available Modules</span>
+              </h6>
+                {%for avail in avail_modules%}
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="">
+                        <span data-feather="book" class="align-text-bottom"></span>
+                        {{avail.id}} - {{avail.title}}
+                        </a>
+                    </li>
+                {%endfor%}
+
+                </div>
+            </div>
+        </ul>
+        </div>
+    </nav>
+{%endblock mods%}
+
+{% block graph %}
+{% if label %}
+  <canvas class="my-4 w-100" id="myIDChart" width="900" height="380"></canvas>
+{%endif%}
+<script>
+const ctx = document.getElementById('myIDChart')
+    // eslint-disable-next-line no-unused-vars
+const myChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{label|safe}},
+    datasets: [{
+        data: {{date[0]|safe}},
+        label: "Biomedical Electronics, Coursework 1",
+        borderColor: "#3e95cd",
+        fill: false
+      },
+      {
+        data: {{date[1]|safe}},
+        label: "Communication Networks, Coursework 1",
+        borderColor: "red",
+        fill: false
+      },
+      {
+        data: {{date[2]|safe}},
+        label: "Communication Networks, Coursework 2",
+        borderColor: "green",
+        fill: false
+      }
+    ]
+  },
+  options: {
+    title: {
+      display: true,
+      text: 'Positive Cases of COVID in provinces of Canada'
+    },
+    hover: {
+     mode: 'index',
+     intersect: true
+    },
+  }
+});
+</script>
+{%endblock graph%}

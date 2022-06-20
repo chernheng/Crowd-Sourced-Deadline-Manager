@@ -61,6 +61,20 @@
                             {{ form.breakdown(class="form-control form-control-lg") }}
                         {% endif %}
                     </div>
+                    <div class="form-group mb-4">
+                        {{ form.start_date.label(class="form-control-label") }}
+                        {% if form.start_date.errors %}
+                            {{ form.start_date(class="form-control form-control-lg is-invalid",type="datetime-local") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.start_date.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.start_date(class="form-control form-control-lg",type="datetime-local") }}
+                        {% endif %}
+                        
+                    </div>
                 </fieldset>
                 <div class="form-group mb-4">
                     {{ form.submit(class="btn btn-outline-info") }}
