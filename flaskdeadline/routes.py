@@ -23,8 +23,7 @@ VOTE = {
 
 def hello(start_end,ects_breakdown):
     timezone_variable = gettz("Europe/London") 
-    m = GEKKO(remote=True)
-    Z = None
+    m = GEKKO(remote=False)
 
     n = int(len(start_end)/2)
     no_intervals = len(start_end)-1
@@ -36,9 +35,6 @@ def hello(start_end,ects_breakdown):
     exist = []
     for i in range(5):
         exist.append([0]*9)
-    intensity_val = []
-    for i in range(5):
-        intensity_val.append([0]*9)
     print(interval_days)
     print(exist)
     for s in range(no_intervals):
@@ -49,29 +45,41 @@ def hello(start_end,ects_breakdown):
             if start_end[t*2]<= sorted_dates[s] and sorted_dates[s+1] <= start_end[t*2+1] :
                 exist[t][s] = 1
     print("Exist: ", exist)
-
-    intensity_val[0][0],intensity_val[0][1],intensity_val[0][2],intensity_val[0][3],intensity_val[0][4],intensity_val[0][5],intensity_val[0][6],intensity_val[0][7],intensity_val[0][8],intensity_val[1][0],intensity_val[1][1],intensity_val[1][2],intensity_val[1][3],intensity_val[1][4],intensity_val[1][5],intensity_val[1][6],intensity_val[1][7],intensity_val[1][8],intensity_val[2][0],intensity_val[2][1],intensity_val[2][2],intensity_val[2][3],intensity_val[2][4],intensity_val[2][5],intensity_val[2][6],intensity_val[2][7],intensity_val[2][8],intensity_val[3][0],intensity_val[3][1],intensity_val[3][2],intensity_val[3][3],intensity_val[3][4],intensity_val[3][5],intensity_val[3][6],intensity_val[3][7],intensity_val[3][8],intensity_val[4][0],intensity_val[4][1],intensity_val[4][2],intensity_val[4][3],intensity_val[4][4],intensity_val[4][5],intensity_val[4][6],intensity_val[4][7],intensity_val[4][8],Z = m.Array(m.Var,46)
+    Z = m.Var()
+    intensity_val = m.Array(m.Var,(n,no_intervals))
+    for i in range(n):
+        for j in range(no_intervals):
+                    intensity_val[i,j].lower = 0
 
 
     m.Minimize(Z)
 
-    m.Equation([exist[0][0]*interval_days[0]*intensity_val[0][0]+exist[0][1]*interval_days[1]*intensity_val[0][1]+exist[0][2]*interval_days[2]*intensity_val[0][2]+exist[0][3]*interval_days[3]*intensity_val[0][3]+exist[0][4]*interval_days[4]*intensity_val[0][4]+exist[0][5]*interval_days[5]*intensity_val[0][5]+exist[0][6]*interval_days[6]*intensity_val[0][6]+exist[0][7]*interval_days[7]*intensity_val[0][7]+exist[0][8]*interval_days[8]*intensity_val[0][8]==ects_breakdown[0],
-                exist[1][0]*interval_days[0]*intensity_val[1][0]+exist[1][1]*interval_days[1]*intensity_val[1][1]+exist[1][2]*interval_days[2]*intensity_val[1][2]+exist[1][3]*interval_days[3]*intensity_val[1][3]+exist[1][4]*interval_days[4]*intensity_val[1][4]+exist[1][5]*interval_days[5]*intensity_val[1][5]+exist[1][6]*interval_days[6]*intensity_val[1][6]+exist[1][7]*interval_days[7]*intensity_val[1][7]+exist[1][8]*interval_days[8]*intensity_val[1][8]==ects_breakdown[1],
-                exist[2][0]*interval_days[0]*intensity_val[2][0]+exist[2][1]*interval_days[1]*intensity_val[2][1]+exist[2][2]*interval_days[2]*intensity_val[2][2]+exist[2][3]*interval_days[3]*intensity_val[2][3]+exist[2][4]*interval_days[4]*intensity_val[2][4]+exist[2][5]*interval_days[5]*intensity_val[2][5]+exist[2][6]*interval_days[6]*intensity_val[2][6]+exist[2][7]*interval_days[7]*intensity_val[2][7]+exist[2][8]*interval_days[8]*intensity_val[2][8]==ects_breakdown[2],
-                exist[3][0]*interval_days[0]*intensity_val[3][0]+exist[3][1]*interval_days[1]*intensity_val[3][1]+exist[3][2]*interval_days[2]*intensity_val[3][2]+exist[3][3]*interval_days[3]*intensity_val[3][3]+exist[3][4]*interval_days[4]*intensity_val[3][4]+exist[3][5]*interval_days[5]*intensity_val[3][5]+exist[3][6]*interval_days[6]*intensity_val[3][6]+exist[3][7]*interval_days[7]*intensity_val[3][7]+exist[3][8]*interval_days[8]*intensity_val[3][8]==ects_breakdown[3],
-                exist[4][0]*interval_days[0]*intensity_val[4][0]+exist[4][1]*interval_days[1]*intensity_val[4][1]+exist[4][2]*interval_days[2]*intensity_val[4][2]+exist[4][3]*interval_days[3]*intensity_val[4][3]+exist[4][4]*interval_days[4]*intensity_val[4][4]+exist[4][5]*interval_days[5]*intensity_val[4][5]+exist[4][6]*interval_days[6]*intensity_val[4][6]+exist[4][7]*interval_days[7]*intensity_val[4][7]+exist[4][8]*interval_days[8]*intensity_val[4][8]==ects_breakdown[4]])
+    def test(exist,interval_days,ects_breakdown,intensity_val,n, no_intervals):
+        equation = []
+        for i in range(n):
+            result = 0
+            for j in range(no_intervals):
+                if exist[i][j] == 1:
+                    result = result + interval_days[j]*intensity_val[i][j]
+            equation.append(result == ects_breakdown[i])
+        return equation
+
+    m.Equations([test(exist,interval_days,ects_breakdown,intensity_val,n, no_intervals)])
+
+    def test2(Z,exist,intensity_val,n, no_intervals):
+        equation = []
+        for i in range(no_intervals):
+            result = 0
+            for j in range(n):
+                if exist[j][i]:
+                    result = result + intensity_val[j][i]
+            equation.append(Z >=result)
+        return equation
 
 
-    m.Equations([Z>=exist[0][0]*intensity_val[0][0]+exist[1][0]*intensity_val[1][0]+exist[2][0]*intensity_val[2][0]+exist[3][0]*intensity_val[3][0]+exist[4][0]*intensity_val[4][0],
-                Z>=exist[0][1]*intensity_val[0][1]+exist[1][1]*intensity_val[1][1]+exist[2][1]*intensity_val[2][1]+exist[3][1]*intensity_val[3][1]+exist[4][1]*intensity_val[4][1],
-                Z>=exist[0][2]*intensity_val[0][2]+exist[1][2]*intensity_val[1][2]+exist[2][2]*intensity_val[2][2]+exist[3][2]*intensity_val[3][2]+exist[4][2]*intensity_val[4][2],
-                Z>=exist[0][3]*intensity_val[0][3]+exist[1][3]*intensity_val[1][3]+exist[2][3]*intensity_val[2][3]+exist[3][3]*intensity_val[3][3]+exist[4][3]*intensity_val[4][3],
-                Z>=exist[0][4]*intensity_val[0][4]+exist[1][4]*intensity_val[1][4]+exist[2][4]*intensity_val[2][4]+exist[3][4]*intensity_val[3][4]+exist[4][4]*intensity_val[4][4],
-                Z>=exist[0][5]*intensity_val[0][5]+exist[1][5]*intensity_val[1][5]+exist[2][5]*intensity_val[2][5]+exist[3][5]*intensity_val[3][5]+exist[4][5]*intensity_val[4][5],
-                Z>=exist[0][6]*intensity_val[0][6]+exist[1][6]*intensity_val[1][6]+exist[2][6]*intensity_val[2][6]+exist[3][6]*intensity_val[3][6]+exist[4][6]*intensity_val[4][6],
-                Z>=exist[0][7]*intensity_val[0][7]+exist[1][7]*intensity_val[1][7]+exist[2][7]*intensity_val[2][7]+exist[3][7]*intensity_val[3][7]+exist[4][7]*intensity_val[4][7],
-                Z>=exist[0][8]*intensity_val[0][8]+exist[1][8]*intensity_val[1][8]+exist[2][8]*intensity_val[2][8]+exist[3][8]*intensity_val[3][8]+exist[4][8]*intensity_val[4][8],intensity_val[0][0]>=0,intensity_val[0][1]>=0,intensity_val[0][2]>=0,intensity_val[0][3]>=0,intensity_val[0][4]>=0,intensity_val[0][5]>=0,intensity_val[0][6]>=0,intensity_val[0][7]>=0,intensity_val[0][8]>=0,intensity_val[1][0]>=0,intensity_val[1][1]>=0,intensity_val[1][2]>=0,intensity_val[1][3]>=0,intensity_val[1][4]>=0,intensity_val[1][5]>=0,intensity_val[1][6]>=0,intensity_val[1][7]>=0,intensity_val[1][8]>=0,intensity_val[2][0]>=0,intensity_val[2][1]>=0,intensity_val[2][2]>=0,intensity_val[2][3]>=0,intensity_val[2][4]>=0,intensity_val[2][5]>=0,intensity_val[2][6]>=0,intensity_val[2][7]>=0,intensity_val[2][8]>=0,intensity_val[3][0]>=0,intensity_val[3][1]>=0,intensity_val[3][2]>=0,intensity_val[3][3]>=0,intensity_val[3][4]>=0,intensity_val[3][5]>=0,intensity_val[3][6]>=0,intensity_val[3][7]>=0,intensity_val[3][8]>=0,intensity_val[4][0]>=0,intensity_val[4][1]>=0,intensity_val[4][2]>=0,intensity_val[4][3]>=0,intensity_val[4][4]>=0,intensity_val[4][5]>=0,intensity_val[4][6]>=0,intensity_val[4][7]>=0,intensity_val[4][8]>=0])
-    m.solve()
+    m.Equations([test2(Z,exist,intensity_val,n, no_intervals)])
+    m.solve(disp=False)
+    print('Solver Time: ', m.options.SOLVETIME)
     print(intensity_val)
     print(intensity_val[0][0].value[0])
     print(Z.value[0])
@@ -86,6 +94,9 @@ def hello(start_end,ects_breakdown):
         print(date_range[i])
     print(cumsum(interval_days))
     date_intensity = []
+    for i in range(n):
+        for j in range(no_intervals):
+                    intensity_val[i][j].value[0]=intensity_val[i][j].value[0] * exist[i][j]
     for i in intensity_val: # for each coursework
         temp = [i[0].value[0]]
         for j in range(no_intervals):
@@ -643,9 +654,75 @@ def staff_feedback(module,cw):
             feedback_data[i] = (feedback_data[i][0],feedback_data[i][1], "More Than Expected")
     return render_template('staff_hours_data.html', attributes= feedback_data, staff= True)
 
-
-@app.route('/intensity', methods=['GET', 'POST'])
+@app.route('/scheduling', methods=['GET', 'POST'])
 def intensity():
+    form = OptimisationForm()
+    user = None
+    if not session['samlUserdata']:
+        return redirect(url_for('landing'))
+    elif session['access'] == ACCESS['staff']:
+        flash('Please use the staff page!', 'danger')
+        return redirect(url_for('staff'))
+    else:
+        user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
+        if not user:
+            flash('User does not exist!', 'danger')
+            return redirect(url_for('landing'))
+    avail = Module.query.all()
+    data = None
+    label = None
+    names = None
+    timezone_variable = gettz("Europe/London") 
+    if form.validate_on_submit():
+        cwk_list = []
+        names = []
+        if form.c1.data != "---":
+            data = form.c1.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+            names.append(form.c1.data)
+        if form.c2.data != "---":
+            data = form.c2.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+            names.append(form.c2.data)
+        if form.c3.data != "---":
+            data = form.c3.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+            names.append(form.c3.data)
+        if form.c4.data != "---":
+            data = form.c4.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+            names.append(form.c4.data)
+        if form.c5.data != "---":
+            data = form.c5.data.split(" - ")
+            cwk_list.append((data[0],data[1]))
+            names.append(form.c5.data)
+        print(cwk_list)
+        print("Waht the hell")
+        ects_breakdown = []
+        start_end_dates =[]
+        for i in cwk_list:
+            mod = Module.query.filter_by(title=i[0]).first()
+            cw = Coursework.query.filter_by(title=i[1],module_id = mod.id).first()
+            deadline = Deadline.query.filter_by(coursework_id=i[1], module_id = mod.id, vote = "Up").first()
+            ects_breakdown.append(cw.breakdown*mod.ects)
+            start_end_dates.append(cw.start_date.date())
+            start_end_dates.append(deadline.date.date())
+        if len(ects_breakdown)!=5:
+            ects_breakdown = ects_breakdown + [0]*(5-len(ects_breakdown))
+        print("STart end: ",start_end_dates)
+        data,label = hello(start_end_dates,ects_breakdown)
+        print(ects_breakdown)
+        print(start_end_dates)
+        if len(data)!=5:
+            data= data + [[0]]*(5-len(data))
+        if len(names)!=5:
+            names= names + ["---"]*(5-len(names))
+
+    return render_template("lin_opt.html",  form = form, avail_modules = avail, taking = user.module_taken, user=user, label=label,date=data, cwk= names)
+
+
+@app.route('/staff/scheduling', methods=['GET', 'POST'])
+def staff_intensity():
     form = OptimisationForm()
     user = None
     if not session['samlUserdata']:
@@ -662,23 +739,31 @@ def intensity():
     teacher = user
     data = None
     label = None
+    names = None
+    timezone_variable = gettz("Europe/London") 
     if form.validate_on_submit():
         cwk_list = []
+        names = []
         if form.c1.data != "---":
             data = form.c1.data.split(" - ")
             cwk_list.append((data[0],data[1]))
+            names.append(form.c1.data)
         if form.c2.data != "---":
             data = form.c2.data.split(" - ")
             cwk_list.append((data[0],data[1]))
+            names.append(form.c2.data)
         if form.c3.data != "---":
             data = form.c3.data.split(" - ")
             cwk_list.append((data[0],data[1]))
+            names.append(form.c3.data)
         if form.c4.data != "---":
             data = form.c4.data.split(" - ")
             cwk_list.append((data[0],data[1]))
+            names.append(form.c4.data)
         if form.c5.data != "---":
             data = form.c5.data.split(" - ")
             cwk_list.append((data[0],data[1]))
+            names.append(form.c5.data)
         print(cwk_list)
         print("Waht the hell")
         ects_breakdown = []
@@ -692,36 +777,16 @@ def intensity():
             start_end_dates.append(deadline.date.date())
         if len(ects_breakdown)!=5:
             ects_breakdown = ects_breakdown + [0]*(5-len(ects_breakdown))
+        print("STart end: ",start_end_dates)
         data,label = hello(start_end_dates,ects_breakdown)
         print(ects_breakdown)
         print(start_end_dates)
+        if len(data)!=5:
+            data= data + [[0]]*(5-len(data))
+        if len(names)!=5:
+            names= names + ["---"]*(5-len(names))
 
-    # label = [datetime(2022, 5, 4,15).strftime("%d/%m/%Y"), datetime(2022, 5, 6).date().strftime("%d/%m/%Y"), 
-    #         datetime(2022, 5, 12,15).strftime("%d/%m/%Y"), datetime(2022, 5, 18).date().strftime("%d/%m/%Y"),
-    #         datetime(2022, 5, 14).date().strftime("%d/%m/%Y"), datetime(2022, 5, 20).date().strftime("%d/%m/%Y")]
-    # print(intensity_val)
-    # print(intensity_val[0][0].value[0])
-    # print(Z.value[0])
-    # print(Z)
-
-    # # Creating data for graph
-    # date_range = pd.date_range(start=sorted_dates[0], end = sorted_dates[-1]).to_pydatetime().tolist()
-    # print(date_range)
-    # range_index = cumsum(interval_days)
-    # for i in range_index:
-    #     print(date_range[i])
-    # print(cumsum(interval_days))
-    # date_intensity = []
-    # for i in intensity_val: # for each coursework
-    #     temp = [i[0].value[0]]
-    #     for j in range(no_intervals):
-    #         for k in range(interval_days[j]):
-    #             temp.append(i[j].value[0])
-    #     date_intensity.append(temp)
-
-    # print(date_intensity)
-
-    return render_template("lin_opt.html",  avail_modules = avail,form = form, taking = teacher.module_responsible, user=teacher, label=label,date=data)
+    return render_template("lin_opt.html",  avail_modules = avail,form = form, staff= True,taking = teacher.module_responsible, user=teacher, label=label,date=data, cwk= names)
 
 def deadline_data(deadline_array, deadlines_voted):
     '''

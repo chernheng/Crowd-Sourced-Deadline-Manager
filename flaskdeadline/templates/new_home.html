@@ -1,7 +1,8 @@
 {% extends "new_layout.html" %}
 {%block header%}
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-3 border-bottom">
-        <p>Deadlines are shown below under each module. Click the Thumbs Up button to vote for a particular deadline you believe is correct and Thumbs Down the ones that you know are wrong. </p>
+        <p><b>Please register for modules that you want to take on the left. After registering, deadlines are shown below under each module. Click the <a class="bi bi-hand-thumbs-up align-text-bottom mt-1" style="font-size: 1.1rem; color: green;"></a> button to vote for a particular deadline you believe is correct and <a class="bi bi-hand-thumbs-down align-text-bottom pt-3" style="font-size: 1.1rem; color: red;"></a> the ones that you know are wrong.
+        <br>You will be able to add new deadlines, edit module details and give module feedback using the buttons below.<br> Scheduling and Work Analysis allows you to see the period of highest workload given the coursework start and end dates.</b> </p>
         <!-- <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group me-2">
             <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
@@ -18,7 +19,6 @@
 {%endblock header%}
 
 {% block content %}
-
     {%for title in user_modules%}
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2">
             <h3>{{title}}</h3>
@@ -119,6 +119,11 @@
             <i class="bi bi-mortarboard-fill" style="font-size: 1rem;"> - Indicate GTA voted for this deadline</i>
         </div>
     </div>
+    <div class="btn-toolbar">
+      <div class="btn-group">
+      <a type="button" class="btn btn-sm btn-primary mb-3" href="/scheduling">Scheduling and Workload Analysis</a>
+      </div>
+  </div>
 
 {%endblock content%}
 

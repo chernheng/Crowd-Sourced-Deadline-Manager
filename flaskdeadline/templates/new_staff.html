@@ -1,13 +1,18 @@
 {% extends "new_layout.html" %}
 {%block header%}
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-3 border-bottom">
+        <p><b>Please indicate which module you are responsible for on the left. After registering the modules, deadlines for your own modules are shown below, while deadlines for all other modules are shown below that.
+            <br> Click the <a class="bi bi-hand-thumbs-up align-text-bottom mt-1" style="font-size: 1.1rem; color: green;"></a> button to indicate which deadline is correct and <a class="bi bi-hand-thumbs-down align-text-bottom pt-3" style="font-size: 1.1rem; color: red;"></a> the ones that are wrong.
+            <br>You will be able to add new deadlines, edit module details, assign GTA, and see the feedback given by students using the buttons below.<br> Scheduling and Work Analysis allows you to see the period of highest workload given the coursework start and end dates.</b> </p>
       </div>
 
 
 {%endblock header%}
 
 {% block content %}
-
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 border-bottom">
+    <h6>Your Modules</h6> 
+ </div>
     {%for title in teacher_deadlines%}
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2">
             <h3>{{title}}</h3>
@@ -81,7 +86,7 @@
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-2 mt-2 mb-2 text-muted text-uppercase"></h6>
     {% endfor %}
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 border-bottom">
-       <h6>Other Module Deadlines</h6> 
+       <h6>Other Modules</h6> 
     </div>
     {%for title in all_else%}
 
@@ -158,6 +163,11 @@
         </div>
         <div class="row">
             <i class="bi bi-mortarboard-fill" style="font-size: 1rem;"> - Indicate GTA voted for this deadline</i>
+        </div>
+    </div>
+    <div class="btn-toolbar">
+        <div class="btn-group">
+        <a type="button" class="btn btn-sm btn-primary mb-3" href="/staff/scheduling">Scheduling and Workload Analysis</a>
         </div>
     </div>
 
