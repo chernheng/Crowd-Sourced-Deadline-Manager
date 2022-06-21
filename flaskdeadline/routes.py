@@ -1122,4 +1122,3 @@ def metadata():
     else:
         resp = make_response(', '.join(errors), 500)
     return resp
-
