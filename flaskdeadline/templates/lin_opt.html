@@ -136,33 +136,27 @@ const myChart = new Chart(ctx, {
   data: {
     labels: {{label|safe}},
     datasets: [{
-        data: {{date[0]|safe}},
-        label: "{{cwk[0]|safe}}",
+        data: {{date[1]|safe}},
+        label: "Coursework A",
         borderColor: "#3e95cd",
         fill: false
       },
       {
-        data: {{date[1]|safe}},
-        label: "{{cwk[1]|safe}}",
+        data: {{date[2]|safe}},
+        label: "Coursework B",
         borderColor: "red",
         fill: false
       },
       {
-        data: {{date[2]|safe}},
-        label: "{{cwk[2]|safe}}",
+        data: {{date[3]|safe}},
+        label: "Coursework C",
         borderColor: "green",
         fill: false
       },
       {
-        data: {{date[3]|safe}},
-        label: "{{cwk[3]|safe}}",
-        borderColor: "yellow",
-        fill: false
-      },
-      {
-        data: {{date[4]|safe}},
-        label: "{{cwk[4]|safe}}",
-        borderColor: "cyan",
+        data: {{date[0]|safe}},
+        label: "Sum of all intervals",
+        borderColor: "gray",
         fill: false
       }
     ]

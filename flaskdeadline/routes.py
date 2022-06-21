@@ -13,6 +13,8 @@ import pandas as pd
 from numpy import cumsum
 from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
 from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
+import random
+import time
 
 
 VOTE = {
@@ -73,7 +75,7 @@ def hello(start_end,ects_breakdown):
 
 
     m.Equations([test2(Z,exist,intensity_val,n, no_intervals)])
-    m.solve(disp=False)
+    m.solve(disp=True)
     print('Solver Time: ', m.options.SOLVETIME)
 
     # Creating data for graph
@@ -699,16 +701,76 @@ def intensity():
             start_end_dates.append(deadline.date.date())
         if len(ects_breakdown)!=5:
             ects_breakdown = ects_breakdown + [0]*(5-len(ects_breakdown))
-        start_end_dates = [datetime(2022, 5, 20,15,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(), 
-                datetime(2022, 5, 17,15,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(),
-                datetime(2022, 5, 15,11,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(),
-                datetime(2022, 5, 12,11,0,0,0,timezone_variable).date(), datetime(2022, 6, 8,15,0,0,0,timezone_variable).date(),
-                datetime(2022, 5, 20,11,0,0,0,timezone_variable).date(), datetime(2022, 6, 5,15,0,0,0,timezone_variable).date(),
-                datetime(2022, 5, 21,11,0,0,0,timezone_variable).date(), datetime(2022, 6, 7,15,0,0,0,timezone_variable).date()]
-                # start_end_dates = [datetime(2022, 5, 4,15,0,0,0,timezone_variable).date(), datetime(2022, 5, 24,15,0,0,0,timezone_variable).date(), 
-                # datetime(2022, 5, 16,15,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(),
-                # datetime(2022, 5, 8,11,0,0,0,timezone_variable).date(), datetime(2022, 5, 29,15,0,0,0,timezone_variable).date()]
-        ects_breakdown = [75,100,150,100,80,90]
+        start_end_dates = [datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date()]
+        ects_breakdown = [100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,100,130,160,53,20,100,130,160,53,20,100,130,160,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20]
+        
         print("STart end: ",start_end_dates)
         data,label = hello(start_end_dates,ects_breakdown)
         print(ects_breakdown)
@@ -895,10 +957,12 @@ def staff():
      ).filter(Deadline.module_id.in_(check)).all()
 
     # All other deadlines not subscribed by teacher
+    start_time = time.time()
     all_deadlines_else = (db.session.query(Deadline.coursework_id,Deadline.module_id,Deadline.date,func.count(Deadline.vote).filter(Deadline.vote=="Up"),func.count(Deadline.vote).filter(Deadline.vote=="Down"),func.count(Deadline.vote).label("# people"))
     .group_by(Deadline.coursework_id,Deadline.module_id,Deadline.date)
      ).filter(Deadline.module_id.not_in(check)).all()
-    
+    mod = Module.query.all()
+    print("--- %s seconds ---" % (time.time() - start_time))
     # Checking the average number of hours for each coursework
     no_hours = {}
     all_cw = Coursework.query.all()

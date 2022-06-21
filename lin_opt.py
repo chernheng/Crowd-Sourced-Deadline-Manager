@@ -3,38 +3,29 @@ from datetime import datetime
 import pandas as pd
 from numpy import cumsum
 from dateutil.tz import gettz
+import random
 def hello():
     timezone_variable = gettz("Europe/London") 
     m = GEKKO(remote=True)
-    start_end = [datetime(2022, 5, 4,15,0,0,0,timezone_variable).date(), datetime(2022, 5, 6,15,0,0,0,timezone_variable).date(), 
-                datetime(2022, 5, 12,15,0,0,0,timezone_variable).date(), datetime(2022, 5, 18,15,0,0,0,timezone_variable).date(),
-                datetime(2022, 5, 14,11,0,0,0,timezone_variable).date(), datetime(2022, 5, 20,15,0,0,0,timezone_variable).date(),
-                datetime(2022, 5, 16,15,0,0,0,timezone_variable).date(), datetime(2022, 5, 21,15,0,0,0,timezone_variable).date(),
-                datetime(2022, 5, 16,15,0,0,0,timezone_variable).date(), datetime(2022, 5, 30,15,0,0,0,timezone_variable).date()]
-    ects_breakdown = [100,130,160,53,20]
-    Z = None
-
+    start_end = [datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, random.randint(1,29),15,0,0,0,timezone_variable).date(), datetime(2022, 6, random.randint(1,29),15,0,0,0,timezone_variable).date()]
+    ects_breakdown = [100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,100,130,160,53,20,100,130,160,53,20,100,130,160,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20,100,130,160,53,20]
     n = int(len(start_end)/2)
+    print(n)
     no_intervals = len(start_end)-1
     sorted_dates = start_end.copy()
     sorted_dates.sort()
-
-    print(sorted_dates)
-    interval_days = [0] * (9)
+    interval_days = [0] * (no_intervals)
     exist = []
-    for i in range(5):
-        exist.append([0]*9)
-    print(interval_days)
-    print(exist)
+    for i in range(n):
+        exist.append([0]*no_intervals)
     for s in range(no_intervals):
         interval_days[s] = (sorted_dates[s+1] - sorted_dates[s]).days
-    print("This is it: ",interval_days)
     for t in range(n):
         for s in range(no_intervals):
             if start_end[t*2]<= sorted_dates[s] and sorted_dates[s+1] <= start_end[t*2+1] :
                 exist[t][s] = 1
-    print("Exist: ", exist)
-
     Z = m.Var()
     intensity_val = m.Array(m.Var,(n,no_intervals))
     for i in range(n):
@@ -68,36 +59,37 @@ def hello():
 
 
     m.Equations([test2(Z,exist,intensity_val,n, no_intervals)])
-    m.solve()
-    print(intensity_val)
-    print(intensity_val[0][0].value[0])
-    print(Z.value[0])
-    print(Z)
+    m.solve(disp=True)
+    print('Solver Time: ', m.options.SOLVETIME)
+    # print(intensity_val)
+    # print(intensity_val[0][0].value[0])
+    # print(Z.value[0])
+    # print(Z)
 
     # Creating data for graph
-    date_range = pd.date_range(start=sorted_dates[0], end = sorted_dates[-1]).to_pydatetime().tolist()
-    date_range = [i.strftime("%d/%m/%Y") for i in date_range]
-    print(date_range)
-    range_index = cumsum(interval_days)
-    for i in range_index:
-        print(date_range[i])
-    print(cumsum(interval_days))
-    date_intensity = []
-    for i in intensity_val: # for each coursework
-        temp = [i[0].value[0]]
-        for j in range(no_intervals):
-            for k in range(interval_days[j]):
-                temp.append(i[j].value[0])
-        date_intensity.append(temp)
+    # date_range = pd.date_range(start=sorted_dates[0], end = sorted_dates[-1]).to_pydatetime().tolist()
+    # date_range = [i.strftime("%d/%m/%Y") for i in date_range]
+    # print(date_range)
+    # range_index = cumsum(interval_days)
+    # for i in range_index:
+    #     print(date_range[i])
+    # print(cumsum(interval_days))
+    # date_intensity = []
+    # for i in intensity_val: # for each coursework
+    #     temp = [i[0].value[0]]
+    #     for j in range(no_intervals):
+    #         for k in range(interval_days[j]):
+    #             temp.append(i[j].value[0])
+    #     date_intensity.append(temp)
     
-    eval_str = ""
-    for i in range(5):
-        for j in range(9):
-            eval_str = eval_str +  "intensity_val[" + str(i)+ "][" + str(j) + "]>=0,"
-    print(eval_str)
+    # eval_str = ""
+    # for i in range(5):
+    #     for j in range(9):
+    #         eval_str = eval_str +  "intensity_val[" + str(i)+ "][" + str(j) + "]>=0,"
+    # print(eval_str)
 
-    print(date_intensity)
-    return (date_intensity,date_range)
+    # print(date_intensity)
+    # return (date_intensity,date_range)
  
 
 
