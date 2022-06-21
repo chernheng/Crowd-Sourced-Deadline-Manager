@@ -26,25 +26,20 @@ def hello(start_end,ects_breakdown):
     m = GEKKO(remote=False)
 
     n = int(len(start_end)/2)
+    print(n)
     no_intervals = len(start_end)-1
     sorted_dates = start_end.copy()
     sorted_dates.sort()
-
-    print(sorted_dates)
-    interval_days = [0] * (9)
+    interval_days = [0] * (no_intervals)
     exist = []
-    for i in range(5):
-        exist.append([0]*9)
-    print(interval_days)
-    print(exist)
+    for i in range(n):
+        exist.append([0]*no_intervals)
     for s in range(no_intervals):
         interval_days[s] = (sorted_dates[s+1] - sorted_dates[s]).days
-    print("This is it: ",interval_days)
     for t in range(n):
         for s in range(no_intervals):
             if start_end[t*2]<= sorted_dates[s] and sorted_dates[s+1] <= start_end[t*2+1] :
                 exist[t][s] = 1
-    print("Exist: ", exist)
     Z = m.Var()
     intensity_val = m.Array(m.Var,(n,no_intervals))
     for i in range(n):
@@ -80,19 +75,11 @@ def hello(start_end,ects_breakdown):
     m.Equations([test2(Z,exist,intensity_val,n, no_intervals)])
     m.solve(disp=False)
     print('Solver Time: ', m.options.SOLVETIME)
-    print(intensity_val)
-    print(intensity_val[0][0].value[0])
-    print(Z.value[0])
-    print(Z)
 
     # Creating data for graph
     date_range = pd.date_range(start=sorted_dates[0], end = sorted_dates[-1]).to_pydatetime().tolist()
     date_range = [i.strftime("%d/%m/%Y") for i in date_range]
-    print(date_range)
     range_index = cumsum(interval_days)
-    for i in range_index:
-        print(date_range[i])
-    print(cumsum(interval_days))
     date_intensity = []
     for i in range(n):
         for j in range(no_intervals):
@@ -103,8 +90,11 @@ def hello(start_end,ects_breakdown):
             for k in range(interval_days[j]):
                 temp.append(i[j].value[0])
         date_intensity.append(temp)
+    sum_interval = [0] * no_intervals
+    # for i in date_intensity:
+    #     sum_interval = [sum(x) for x in zip(*date_intensity)]
+    # date_intensity.insert(0,sum_interval)
 
-    print(date_intensity)
     return (date_intensity,date_range)
 
 @app.route("/teststaff")
@@ -709,6 +699,16 @@ def intensity():
             start_end_dates.append(deadline.date.date())
         if len(ects_breakdown)!=5:
             ects_breakdown = ects_breakdown + [0]*(5-len(ects_breakdown))
+        start_end_dates = [datetime(2022, 5, 20,15,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(), 
+                datetime(2022, 5, 17,15,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, 15,11,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, 12,11,0,0,0,timezone_variable).date(), datetime(2022, 6, 8,15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, 20,11,0,0,0,timezone_variable).date(), datetime(2022, 6, 5,15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, 21,11,0,0,0,timezone_variable).date(), datetime(2022, 6, 7,15,0,0,0,timezone_variable).date()]
+                # start_end_dates = [datetime(2022, 5, 4,15,0,0,0,timezone_variable).date(), datetime(2022, 5, 24,15,0,0,0,timezone_variable).date(), 
+                # datetime(2022, 5, 16,15,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(),
+                # datetime(2022, 5, 8,11,0,0,0,timezone_variable).date(), datetime(2022, 5, 29,15,0,0,0,timezone_variable).date()]
+        ects_breakdown = [75,100,150,100,80,90]
         print("STart end: ",start_end_dates)
         data,label = hello(start_end_dates,ects_breakdown)
         print(ects_breakdown)
