@@ -7,6 +7,11 @@ ACCESS = {
     'staff': 1,
     'admin': 2
 }
+VOTE = {
+    'Neutral': 0,
+    'Up': 1,
+    'Down': 2
+}
 
 take = db.Table('take', 
     db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True),

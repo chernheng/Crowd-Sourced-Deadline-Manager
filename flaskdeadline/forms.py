@@ -5,6 +5,8 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange
 from wtforms_components import DateRange
 from datetime import datetime
 from flaskdeadline.models import Student, Coursework
+from flaskdeadline import db
+
 academic_yr = 2022
 
 class RegistrationForm(FlaskForm):
@@ -63,7 +65,7 @@ class BreakdownForm(FlaskForm):
     submit = SubmitField('Edit Coursework Details')
 
 def avail_students():      
-    student = Student.query.all()
+    student = db.session.query(Student).all()
     return sorted([m.id + " - " + m.name for m in student])
 
 def avail_cw():      

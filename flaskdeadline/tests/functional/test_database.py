@@ -1,9 +1,11 @@
 
-from flaskdeadline import app, db
+from flaskdeadline import create_app, db
 from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, ACCESS
 
 
 def test_subscribe():
+    app =create_app()
+    app.app_context().push() 
     with app.test_client() as test_client:
         with test_client.session_transaction() as sess:
             sess['samlUserdata'] = True
