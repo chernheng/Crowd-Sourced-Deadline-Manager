@@ -315,6 +315,10 @@ def intensity():
             start_end_dates.append(deadline.date.date())
         if len(ects_breakdown)!=5:
             ects_breakdown = ects_breakdown + [0]*(5-len(ects_breakdown))
+        start_end_dates =  [datetime(2022, 5, 20,20,0,0,0,timezone_variable).date(), datetime(2022,6,3,15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, 17,17,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(),
+                datetime(2022, 5, 15,15,0,0,0,timezone_variable).date(), datetime(2022, 6,3,15,0,0,0,timezone_variable).date()]
+        ects_breakdown = [75,100,150,0,0]
         print("STart end: ",start_end_dates)
         data,label = linear_opt(start_end_dates,ects_breakdown)
         print(ects_breakdown)

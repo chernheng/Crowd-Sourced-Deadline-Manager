@@ -30,6 +30,7 @@ def linear_opt(start_end,ects_breakdown):
             if start_end[t*2]<= sorted_dates[s] and sorted_dates[s+1] <= start_end[t*2+1] :
                 exist[t][s] = 1
     Z = m.Var()
+    print(interval_days)
     intensity_val = m.Array(m.Var,(n,no_intervals))
     for i in range(n):
         for j in range(no_intervals):
@@ -64,6 +65,7 @@ def linear_opt(start_end,ects_breakdown):
     m.Equations([test2(Z,exist,intensity_val,n, no_intervals)])
     m.solve(disp=True)
     print('Solver Time: ', m.options.SOLVETIME)
+    print(intensity_val)
 
     # Creating data for graph
     date_range = pd.date_range(start=sorted_dates[0], end = sorted_dates[-1]).to_pydatetime().tolist()

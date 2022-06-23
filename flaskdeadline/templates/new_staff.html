@@ -26,7 +26,7 @@
             </div>
         {%for cw in teacher_deadlines[title]%}
         <button class="collapsible">{{cw}}</button>
-        <div class="content container">
+        <div class="content container" style="max-height: 1000px">
             <div class = "row">
             <div class = "col-sm article-content">
             {%for element in teacher_deadlines[title][cw] %}
@@ -100,7 +100,7 @@
         </div>
         {%for cw in all_else[title]%}
         <button class="collapsible">{{cw}}</button>
-        <div class="content container">
+        <div class="content container" style="max-height: 1000px">
             <div class = "row">
             <div class = "col-sm article-content">
             {%for element in all_else[title][cw] %}

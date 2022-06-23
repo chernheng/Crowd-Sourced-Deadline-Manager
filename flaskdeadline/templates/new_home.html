@@ -31,7 +31,7 @@
             </div>
         {%for cw in user_modules[title]%}
         <button class="collapsible">{{cw}}</button>
-        <div class="content container">
+        <div class="content container "style="max-height: 1000px">
             <div class = "row">
             <div class = "col-sm article-content">
             {%for element in user_modules[title][cw] %}

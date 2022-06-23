@@ -258,7 +258,7 @@ def staff_edit_mod(module_title):
     return render_template('staff_update_mod.html', form=form, mod =mod,staff=True)
 
 
-@teach.route("/staff/feedback/<string:module>/<string:cw>", methods=['GET', 'POST'])
+@teach.route("/staff/feedback/<string:module>/<string:cw>")
 def staff_feedback(module,cw):
     if not session['samlUserdata']:
         return redirect(url_for('main.landing'))
