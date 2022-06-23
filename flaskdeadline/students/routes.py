@@ -268,6 +268,14 @@ def intensity():
     data = None
     label = None
     names = None
+    cw = Coursework.query.all()
+    choices = [m.module.title + " - " + m.title for m in cw]
+    choices.append("---")
+    form.c1.choices = sorted(choices)
+    form.c2.choices = sorted(choices)
+    form.c3.choices = sorted(choices)
+    form.c4.choices = sorted(choices)
+    form.c5.choices = sorted(choices)
     timezone_variable = gettz("Europe/London") 
     if form.validate_on_submit():
         cwk_list = []
@@ -300,6 +308,8 @@ def intensity():
             mod = Module.query.filter_by(title=i[0]).first()
             cw = Coursework.query.filter_by(title=i[1],module_id = mod.id).first()
             deadline = Deadline.query.filter_by(coursework_id=i[1], module_id = mod.id, vote = "Up").first()
+            print(i)
+            print(deadline)
             ects_breakdown.append(cw.breakdown*mod.ects)
             start_end_dates.append(cw.start_date.date())
             start_end_dates.append(deadline.date.date())
