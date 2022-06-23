@@ -1,5 +1,5 @@
 
-from flaskdeadline import create_app
+from flaskdeadline import app
 ACCESS = {
     'student': 0,
     'staff': 1,
@@ -12,7 +12,6 @@ def test_home_page():
     WHEN the '/' page is requested (GET)
     THEN check that the response is valid
     """
-    app =create_app()
     # Create a test client using the Flask application configured for testing
     with app.test_client() as test_client:
         with test_client.session_transaction() as sess:
@@ -30,7 +29,7 @@ def test_home_page_post():
     WHEN the '/' page is is posted to (POST)
     THEN check that a '405' status code is returned
     """
-    app =create_app()
+
     # Create a test client using the Flask application configured for testing
     with app.test_client() as test_client:
         with test_client.session_transaction() as sess:
@@ -48,7 +47,7 @@ def test_staff_page():
     WHEN the '/' page is requested (GET)
     THEN check that the response is valid
     """
-    app =create_app()
+    
 
     # Create a test client using the Flask application configured for testing
     with app.test_client() as test_client:
@@ -68,7 +67,6 @@ def test_staff_page_post():
     WHEN the '/' page is is posted to (POST)
     THEN check that a '405' status code is returned
     """
-    app =create_app()
     # Create a test client using the Flask application configured for testing
     with app.test_client() as test_client:
         with test_client.session_transaction() as session:

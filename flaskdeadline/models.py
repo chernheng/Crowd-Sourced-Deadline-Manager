@@ -14,18 +14,18 @@ VOTE = {
 }
 
 take = db.Table('take', 
-    db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True),
-    db.Column('module_id', db.Integer, db.ForeignKey('module.id'), primary_key=True)
+    db.Column('student_id', db.String(32), db.ForeignKey('student.id'), primary_key=True),
+    db.Column('module_id', db.String(9), db.ForeignKey('module.id'), primary_key=True)
 ) # set to lower case
 
 gta = db.Table('gta', 
-    db.Column('module_id', db.Integer, db.ForeignKey('module.id'), primary_key=True),  
-    db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True)
+    db.Column('module_id', db.String(9), db.ForeignKey('module.id'), primary_key=True),  
+    db.Column('student_id',db.String(32), db.ForeignKey('student.id'), primary_key=True)
 ) # set to lower case
 
 responsible = db.Table('responsible', 
-    db.Column('lecturer_id', db.Integer, db.ForeignKey('lecturer.id'), primary_key=True),
-    db.Column('module_id', db.Integer, db.ForeignKey('module.id'), primary_key=True)
+    db.Column('lecturer_id', db.String(32), db.ForeignKey('lecturer.id'), primary_key=True),
+    db.Column('module_id', db.String(9), db.ForeignKey('module.id'), primary_key=True)
 ) # set to lower case
 
 class Deadline(db.Model):
@@ -80,9 +80,8 @@ class Hours(db.Model):
         return f"Hours('{self.module_id}', '{self.coursework_title}', '{self.student_id}', '{self.hours}')"
 
 class Coursework(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False)
+    title = db.Column(db.String(100), nullable=False, primary_key=True)
+    module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False, primary_key=True)
     breakdown = db.Column(db.Integer, nullable=False)
     start_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     __table_args__ = (db.UniqueConstraint(title, module_id),)

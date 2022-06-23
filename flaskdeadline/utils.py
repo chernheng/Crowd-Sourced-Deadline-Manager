@@ -1,11 +1,12 @@
 
 from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, ACCESS, VOTE
-
+from flaskdeadline import app
 from datetime import datetime
 from dateutil.tz import gettz
 from gekko import GEKKO
 import pandas as pd
 from numpy import cumsum
+from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
 
 
 
@@ -160,3 +161,43 @@ def deadline_data(deadline_array, deadlines_voted):
         else:
             return_array[modname] = {element[0]:[[element[2],element[3],element[4],data]]}
     return return_array
+
+
+def startdate_data(deadline_array):
+    '''
+    Aimed to extract the data in this form:
+    {'Communication Networks': 
+        {'Coursework 1': [[datetime.datetime(2022, 6, 18, 12, 0), 2, 0, [1, False, True]], [datetime.datetime(2022, 6, 19, 12, 0), 1, 0, [0, False, True]]], 
+         'Coursework 2': [[datetime.datetime(2022, 6, 20, 12, 0), 0, 1, [0, False, False]]]}}
+    Title of module as the key for a dict, and the output is another dict with the coursework title as the key
+    The output of the nest dict is an array of array, with each element of the outer array being data corresponding to 1 deadline.
+    Each element of the inner array is as follow:
+        [date, upvotes, downvotes, [What user voted for: 1 -> up, 2-> down, 0 -> neutral], Did Lect responsible vote?, Is this the majority?, Did GTA vote?]]
+    '''
+    return_array = {}
+    
+    for element in deadline_array:
+        mod = Module.query.filter_by(id=element[1]).first()
+        modname = mod.title
+        if modname in return_array:
+            return_array[modname][element[0]] = element[2]
+        else:
+            return_array[modname] = {element[0]:element[2]}
+    return return_array
+
+def init_saml_auth(req):
+    auth = OneLogin_Saml2_Auth(req, custom_base_path=app.config['SAML_PATH'])
+    return auth
+
+
+def prepare_flask_request(request):
+    # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
+    return {
+        'https': 'on' if request.scheme == 'https' else 'off',
+        'http_host': request.host,
+        'script_name': request.path,
+        'get_data': request.args.copy(),
+        # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
+        # 'lowercase_urlencoding': True,
+        'post_data': request.form.copy(),
+    }

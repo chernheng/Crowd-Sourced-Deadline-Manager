@@ -1,67 +1,23 @@
+from turtle import st
 from flask import render_template, url_for, flash, redirect, request, session, make_response, Blueprint
 from flaskdeadline import db, app
 from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, ACCESS
-from flaskdeadline.forms import RegistrationForm, LoginForm, ModuleForm, EditForm, DeadlineForm, FeedbackForm, BreakdownForm, OptimisationForm
+from flaskdeadline.forms import ModuleForm, EditForm, DeadlineForm, FeedbackForm, BreakdownForm, OptimisationForm
 from sqlalchemy import update, func, and_
 from datetime import datetime
 from dateutil.tz import gettz
 from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
 from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
-from flaskdeadline.utils import deadline_data, linear_opt
+from flaskdeadline.utils import deadline_data, linear_opt, startdate_data
 
 students = Blueprint('students',__name__)
-@students.route('/index1')
-def index1():
 
-
-    return render_template("index1.html")
-
-@students.route('/login')
-def login():
-    global user
-    if session['samlNameId']:
-        login_info = session['samlUserdata']
-        print(login_info['urn:oid:0.9.2342.19200300.100.1.1'][0]) # cht119
-        print(login_info['urn:oid:0.9.2342.19200300.100.1.3'][0]) # email
-        print(login_info['urn:oid:1.3.6.1.4.1.5923.1.1.1.1']) # [member,student]
-        print(login_info['urn:oid:2.5.4.4'][0] + ", " + login_info['urn:oid:2.5.4.42'][0])
-        id = login_info['urn:oid:0.9.2342.19200300.100.1.1'][0]
-        email = login_info['urn:oid:0.9.2342.19200300.100.1.3'][0]
-        name = login_info['urn:oid:2.5.4.4'][0] + ", " + login_info['urn:oid:2.5.4.42'][0]
-        membership = login_info['urn:oid:1.3.6.1.4.1.5923.1.1.1.1']
-        session['id'] = id
-        session['name'] = name
-        session['email'] = email
-        if id == 'cht119' and email == 'chern.tan19@imperial.ac.uk':
-            session['access'] = ACCESS['admin']
-            return redirect(url_for('students.home'))
-        if 'staff' in membership:
-            check_staff= Lecturer.query.filter_by(id =id, name = name, email = email).first()
-            session['access'] = ACCESS['staff']
-            if not check_staff:
-                staff = Lecturer(id=id, name = name, email = email)
-                db.session.add(staff)
-                db.session.commit()
-            return redirect(url_for('teach.staff'))
-        elif 'student' in membership:
-            check_student= Student.query.filter_by(id =id, name = name, email = email).first()
-            session['access'] = ACCESS['student']
-            if not check_student:
-                student = Student(id=id, name = name, email = email)
-                db.session.add(student)
-                db.session.commit()
-            
-    else:
-        print("Not logged in")
-        return redirect(url_for('students.landing'))
-
-    return redirect(url_for('students.home'))
 
 @students.route('/<string:module>/<string:cw>/<string:date>/up')
 def upvote_deadline(module,cw,date):
     user = None
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -69,7 +25,7 @@ def upvote_deadline(module,cw,date):
         user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
             flash('User does not exist!', 'danger')
-            return redirect(url_for('students.landing'))
+            return redirect(url_for('main.landing'))
     mod = Module.query.filter_by(title=module).first()
     to_change = Deadline.query.filter_by(student=user,module=mod,lecturer_id = '',coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
@@ -87,7 +43,7 @@ def upvote_deadline(module,cw,date):
 def downvote_deadline(module,cw,date):
     user = None
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -95,7 +51,7 @@ def downvote_deadline(module,cw,date):
         user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
             flash('User does not exist!', 'danger')
-            return redirect(url_for('students.landing'))
+            return redirect(url_for('main.landing'))
     mod = Module.query.filter_by(title=module).first()
     to_change = Deadline.query.filter_by(student=user,lecturer_id='',module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
@@ -113,7 +69,7 @@ def downvote_deadline(module,cw,date):
 def feedback(module,cw):
     user = None
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -121,7 +77,7 @@ def feedback(module,cw):
         user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
             flash('User does not exist!', 'danger')
-            return redirect(url_for('students.landing'))
+            return redirect(url_for('main.landing'))
     form = FeedbackForm()
     mod = Module.query.filter_by(title=module).first()
     cw_data = Coursework.query.filter_by(title=cw, module_id = mod.id).first()
@@ -147,7 +103,7 @@ def feedback(module,cw):
 def subscribed(module_id):
     user = None
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -155,7 +111,7 @@ def subscribed(module_id):
         user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
             flash('User does not exist!', 'danger')
-            return redirect(url_for('students.landing'))
+            return redirect(url_for('main.landing'))
     adding = Module.query.filter_by(id=module_id).first()
     if adding in user.module_taken:
         user.module_taken.remove(adding)
@@ -170,7 +126,7 @@ def new_mod():
     form = ModuleForm()
     user = None
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -178,7 +134,7 @@ def new_mod():
         user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
             flash('User does not exist!', 'danger')
-            return redirect(url_for('students.landing'))
+            return redirect(url_for('main.landing'))
     if form.validate_on_submit():
         check_id = Module.query.filter_by(id = form.id.data).first()
         check_title = Module.query.filter_by(title = form.title.data).first()
@@ -201,7 +157,7 @@ def new_deadline(module_title):
     mod = Module.query.filter_by(title=module_title).first()
     user = None
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -209,7 +165,7 @@ def new_deadline(module_title):
         user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
             flash('User does not exist!', 'danger')
-            return redirect(url_for('students.landing'))
+            return redirect(url_for('main.landing'))
     if form.validate_on_submit():
         # 2 checks: 1. User votes up on another deadline / 2. Deadline already exist and user voted already
         deadline_check1 = Deadline.query.filter_by(module_id=form.id.data,coursework_id=form.coursework_title.data,student_id=user.id,vote="Up").all()
@@ -235,7 +191,7 @@ def new_deadline(module_title):
 def edit_mod(module_title):
     form = EditForm()
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -267,11 +223,11 @@ def edit_mod(module_title):
             return redirect(url_for('students.home'))
     return render_template('update_mod.html', form=form, mod =mod)
 
-@students.route("/breakdown/<string:module_title>/<string:cw>", methods=['GET', 'POST'])
+@students.route("/cw/edit/<string:module_title>/<string:cw>", methods=['GET', 'POST'])
 def edit_breakdown(module_title,cw):
     form = BreakdownForm()
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -299,7 +255,7 @@ def intensity():
     form = OptimisationForm()
     user = None
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -307,7 +263,7 @@ def intensity():
         user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
             flash('User does not exist!', 'danger')
-            return redirect(url_for('students.landing'))
+            return redirect(url_for('main.landing'))
     avail = Module.query.all()
     data = None
     label = None
@@ -365,7 +321,7 @@ def intensity():
 def home():
     user = None
     if not session['samlUserdata']:
-        return redirect(url_for('students.landing'))
+        return redirect(url_for('main.landing'))
     elif session['access'] == ACCESS['staff']:
         flash('Please use the staff page!', 'danger')
         return redirect(url_for('teach.staff'))
@@ -373,7 +329,7 @@ def home():
         user = Student.query.filter_by(id=session['id'],name=session['name'],email=session['email']).first()
         if not user:
             flash('User does not exist!', 'danger')
-            return redirect(url_for('students.landing'))
+            return redirect(url_for('main.landing'))
     avail = Module.query.all()
     # Check which modules are taken by the user
     check = [row.id for row in user.module_taken]
@@ -399,10 +355,11 @@ def home():
     ('Coursework 1', 'ELEC40005', datetime.datetime(2022, 6, 17, 3, 25), 1, 0, 1)
     (Cw_title, Module_id, date, # of upvotes, # of downvotes, total # of votes)
     '''
-    print(all_deadlines_subscribed)
+    cw_startdate = (db.session.query(Coursework.title,Coursework.module_id,Coursework.start_date)
+     ).filter(Coursework.module_id.in_(check)).all()
+
     no_hours = {}
     all_cw = Coursework.query.all()
-    print(all_cw[0].module.title)
     for cw in all_cw:
         avg_hrs = db.session.query(func.avg(Hours.hours).label('average')).filter_by(coursework_title=cw.title,module_id=cw.module_id).all()
         count = db.session.query(func.count(Hours.hours).label('number')).filter_by(coursework_title=cw.title,module_id=cw.module_id).all()
@@ -412,151 +369,6 @@ def home():
             no_hours[cw.module.title] = {cw.title:(avg_hrs[0][0],count[0][0])}
     print(no_hours)
     student_deadline = deadline_data(all_deadlines_subscribed,deadlines_voted)
-    
-    return render_template("new_home.html", user_modules=student_deadline, avail_modules = avail, taking = user.module_taken, user=user, no_deadline=no_deadline_mod, hours = no_hours, access = session['access'])
 
+    return render_template("new_home.html", user_modules=student_deadline, avail_modules = avail, taking = user.module_taken, user=user, no_deadline=no_deadline_mod, hours = no_hours, access = session['access'], start = startdate_data(cw_startdate))
 
-def init_saml_auth(req):
-    auth = OneLogin_Saml2_Auth(req, custom_base_path=app.config['SAML_PATH'])
-    return auth
-
-
-def prepare_flask_request(request):
-    # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
-    return {
-        'https': 'on' if request.scheme == 'https' else 'off',
-        'http_host': request.host,
-        'script_name': request.path,
-        'get_data': request.args.copy(),
-        # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
-        # 'lowercase_urlencoding': True,
-        'post_data': request.form.copy(),
-    }
-
-
-@students.route('/', methods=['GET', 'POST'])
-def landing():
-    req = prepare_flask_request(request)
-    auth = init_saml_auth(req)
-    errors = []
-    error_reason = None
-    not_auth_warn = False
-    success_slo = False
-    attributes = False
-    paint_logout = False
-
-
-    if 'sso' in request.args:
-        return redirect(auth.login())
-        # If AuthNRequest ID need to be stored in order to later validate it, do instead
-        # sso_built_url = auth.login()
-        # request.session['AuthNRequestID'] = auth.get_last_request_id()
-        # return redirect(sso_built_url)
-    elif 'sso2' in request.args:
-        return_to = '%sattrs/' % request.host_url
-        return redirect(auth.login(return_to))
-    elif 'slo' in request.args:
-        name_id = session_index = name_id_format = name_id_nq = name_id_spnq = None
-        if 'samlNameId' in session:
-            name_id = session['samlNameId']
-        if 'samlSessionIndex' in session:
-            session_index = session['samlSessionIndex']
-        if 'samlNameIdFormat' in session:
-            name_id_format = session['samlNameIdFormat']
-        if 'samlNameIdNameQualifier' in session:
-            name_id_nq = session['samlNameIdNameQualifier']
-        if 'samlNameIdSPNameQualifier' in session:
-            name_id_spnq = session['samlNameIdSPNameQualifier']
-
-        return redirect(auth.logout(name_id=name_id, session_index=session_index, nq=name_id_nq, name_id_format=name_id_format, spnq=name_id_spnq))
-    elif 'acs' in request.args:
-        request_id = None
-        if 'AuthNRequestID' in session:
-            request_id = session['AuthNRequestID']
-
-        auth.process_response(request_id=request_id)
-        errors = auth.get_errors()
-        not_auth_warn = not auth.is_authenticated()
-        if len(errors) == 0:
-            if 'AuthNRequestID' in session:
-                del session['AuthNRequestID']
-            session['samlUserdata'] = auth.get_attributes()
-            session['samlNameId'] = auth.get_nameid()
-            session['samlNameIdFormat'] = auth.get_nameid_format()
-            session['samlNameIdNameQualifier'] = auth.get_nameid_nq()
-            session['samlNameIdSPNameQualifier'] = auth.get_nameid_spnq()
-            session['samlSessionIndex'] = auth.get_session_index()
-            self_url = OneLogin_Saml2_Utils.get_self_url(req)
-            if 'RelayState' in request.form and self_url != request.form['RelayState']:
-                # To avoid 'Open Redirect' attacks, before execute the redirection confirm
-                # the value of the request.form['RelayState'] is a trusted URL.
-                return redirect(auth.redirect_to(request.form['RelayState']))
-        elif auth.get_settings().is_debug_active():
-            error_reason = auth.get_last_error_reason()
-    elif 'sls' in request.args:
-        request_id = None
-        if 'LogoutRequestID' in session:
-            request_id = session['LogoutRequestID']
-        dscb = lambda: session.clear()
-        url = auth.process_slo(request_id=request_id, delete_session_cb=dscb)
-        errors = auth.get_errors()
-        if len(errors) == 0:
-            if url is not None:
-                # To avoid 'Open Redirect' attacks, before execute the redirection confirm
-                # the value of the url is a trusted URL.
-                return redirect(url)
-            else:
-                success_slo = True
-        elif auth.get_settings().is_debug_active():
-            error_reason = auth.get_last_error_reason()
-
-    if 'samlUserdata' in session:
-        paint_logout = True
-        global login_info
-        if len(session['samlUserdata']) > 0:
-            attributes = session['samlUserdata'].items()
-            return redirect(url_for('students.login'))
-
-    return render_template(
-        'index.html',
-        errors=errors,
-        error_reason=error_reason,
-        not_auth_warn=not_auth_warn,
-        success_slo=success_slo,
-        attributes=attributes,
-        paint_logout=paint_logout
-    )
-
-
-
-@students.route('/attrs/')
-def attrs():
-    paint_logout = False
-    attributes = False
-
-    if 'samlUserdata' in session:
-        paint_logout = True
-        if len(session['samlUserdata']) > 0:
-            attributes = session['samlUserdata'].items()
-
-
-    return render_template('attrs.html', paint_logout=paint_logout,
-                           attributes=attributes)
-
-
-@students.route('/metadata/')
-def metadata():
-    if session['access'] != ACCESS['admin']:
-        return redirect(url_for('students.home'))
-    req = prepare_flask_request(request)
-    auth = init_saml_auth(req)
-    settings = auth.get_settings()
-    metadata = settings.get_sp_metadata()
-    errors = settings.validate_metadata(metadata)
-
-    if len(errors) == 0:
-        resp = make_response(metadata, 200)
-        resp.headers['Content-Type'] = 'text/xml'
-    else:
-        resp = make_response(', '.join(errors), 500)
-    return resp

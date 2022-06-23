@@ -9,25 +9,6 @@ from flaskdeadline import db
 
 academic_yr = 2022
 
-class RegistrationForm(FlaskForm):
-    username = StringField('Username',
-                           validators=[DataRequired(), Length(min=2, max=20)])
-    email = StringField('Email',
-                        validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password',
-                                     validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Sign Up')
-
-
-class LoginForm(FlaskForm):
-    email = StringField('Email',
-                        validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    remember = BooleanField('Remember Me')
-    submit = SubmitField('Login')
-
-
 class ModuleForm(FlaskForm):
     id = StringField('Module Code', validators=[DataRequired(), Length(min=9,max=9)])
     title = StringField('Name of Module', validators=[DataRequired()])
@@ -60,7 +41,7 @@ class DeadlineForm(FlaskForm):
 class BreakdownForm(FlaskForm):
     title = StringField('Name of Module', render_kw={'readonly': True})
     coursework_title = StringField('Name of Coursework', validators=[DataRequired()])
-    breakdown = IntegerField('% of Module (Out of 100%)',default=20, validators=[DataRequired(),NumberRange(min=0,max=100)])
+    breakdown = IntegerField('% of Module (Out of 100%)',default=20, validators=[DataRequired(),NumberRange(min=1,max=100)])
     start_date = DateTimeField('Start Date of Coursework',format='%Y-%m-%dT%H:%M',default=datetime.utcnow())
     submit = SubmitField('Edit Coursework Details')
 

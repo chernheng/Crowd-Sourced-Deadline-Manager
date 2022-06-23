@@ -17,7 +17,7 @@ app.jinja_env.autoescape = True
 app.config['SECRET_KEY'] = '1e84d9bd36571efbeb07f9ec09c60022'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SAML_PATH'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'saml')
-# app.config['WTF_CSRF_ENABLED'] = False
+app.config['WTF_CSRF_ENABLED'] = False
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
@@ -31,6 +31,8 @@ bcrypt = Bcrypt(app)
 from flaskdeadline import models
 from flaskdeadline.students.routes import students
 from flaskdeadline.teach.routes import teach
+from flaskdeadline.main.routes import main
 
 app.register_blueprint(students)
 app.register_blueprint(teach)
+app.register_blueprint(main)

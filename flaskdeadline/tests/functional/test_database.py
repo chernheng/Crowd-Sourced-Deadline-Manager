@@ -1,11 +1,9 @@
 
-from flaskdeadline import create_app, db
+from flaskdeadline import app, db
 from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, ACCESS
 
 
 def test_subscribe():
-    app =create_app()
-    app.app_context().push() 
     with app.test_client() as test_client:
         with test_client.session_transaction() as sess:
             sess['samlUserdata'] = True
@@ -23,3 +21,21 @@ def test_subscribe():
             assert mod in user.module_taken
         
         print(response.data)
+
+def test_student():
+    with app.test_client() as test_client:
+        with test_client.session_transaction() as sess:
+            sess['samlUserdata'] = True
+            sess['id'] = 'cht119'
+            sess['name'] = 'Tan, Chern'
+            sess['email'] = 'chern.tan19@imperial.ac.uk'
+            sess['access'] = ACCESS['student']
+        user = Student(id = 'test', name ='TEST', email = 'test@imperial.ac.uk')
+        db.session.add(user)
+        db.session.commit()
+        student = Student.query.filter_by(id='test').first()
+        
+        assert student.name == 'TEST'
+        assert student.email == 'test@imperial.ac.uk'
+        db.session.delete(student)
+        db.session.commit()

@@ -74,7 +74,7 @@
             <div class = "col-lg d-flex mb-1 mt-1">
               {%for cwk in module.module_cw%}
                 {%if cwk.title == cw%}
-                  <h6 class="detail-content"><u>Details of Module:</u><br>Worth <a href='/breakdown/{{title}}/{{cw}}'>{{cwk.breakdown}}%</a> of Module<br>{{module.content}}</h6>
+                  <h6 class="detail-content"><u>Details of Module:</u><br>Worth <a href='/cw/edit/{{title}}/{{cw}}'>{{cwk.breakdown}}%</a> of Module<br>Start Date: {{start[title][cw].strftime('%d %b, %Y / Time: %H:%M')}}<br>{%if module.content%}{{module.content}}{%endif%}</h6>
                 {%endif%}
               {%endfor%}
             </div>
