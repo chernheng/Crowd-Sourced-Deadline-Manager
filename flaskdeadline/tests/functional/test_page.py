@@ -79,3 +79,14 @@ def test_staff_page_post():
         response = test_client.post('/staff')
         assert response.status_code == 405
 
+def test_staff_feedback():
+    with app.test_client() as test_client:
+        with test_client.session_transaction() as sess:
+            sess['samlUserdata'] = True
+            sess['id'] = 'cht119'
+            sess['name'] = 'Tan, Chern'
+            sess['email'] = 'chern.tan19@imperial.ac.uk'
+            sess['access'] = ACCESS['student']
+        response = test_client.get('/home')
+        assert response.status_code == 200
+

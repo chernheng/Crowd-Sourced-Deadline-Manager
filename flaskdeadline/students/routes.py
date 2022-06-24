@@ -13,6 +13,15 @@ from flaskdeadline.utils import deadline_data, linear_opt, startdate_data
 students = Blueprint('students',__name__)
 
 
+@students.route('/index1')
+def index11():
+    test = '1 OR 1'
+    user = Student.query.filter_by(id=test)
+    print(user)
+    print(user.first())
+
+    return render_template('index1.html')
+
 @students.route('/<string:module>/<string:cw>/<string:date>/up')
 def upvote_deadline(module,cw,date):
     user = None

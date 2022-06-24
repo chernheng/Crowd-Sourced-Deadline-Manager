@@ -26,7 +26,6 @@ app.config.update(
 
 
 db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
 
 from flaskdeadline import models
 from flaskdeadline.students.routes import students
