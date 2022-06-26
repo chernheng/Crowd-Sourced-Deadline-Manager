@@ -50,8 +50,8 @@ def avail_students():
     return sorted([m.id + " - " + m.name for m in student])
 
 def avail_cw():      
-    cw = Coursework.query.all()
-    choices = [m.module.title + " - " + m.title for m in cw]
+    cw = db.session.query(Coursework).all()
+    choices = ['p']
     choices.append("---")
     return sorted(choices)
 

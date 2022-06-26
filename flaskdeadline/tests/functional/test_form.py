@@ -13,12 +13,12 @@ def test_edit_module():
             sess['access'] = ACCESS['student']
         user = Student.query.filter_by(id='cht119').first()
         response = test_client.post("/edit/Biomedical Electronics",data={
-            'id' : "ELEC61000",
+            'id' : "ELEC60005",
             "title": "test",
             "ects": "20"
         })
         # Checking the database
-        mod = Module.query.filter_by(id="ELEC61000").first()
+        mod = Module.query.filter_by(id="ELEC60005").first()
         assert mod.ects == 20
         assert mod.title == 'test'
         assert response.status_code == 302

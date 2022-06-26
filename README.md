@@ -13,3 +13,5 @@ sudo apt install python3.8-venv
 python3 -m venv path_to_folder/venv
 from the repository folder run .venv/bin/activate to activate the virtual environment
 From the repository folder run pip install -r requirements.txt 
+
+Tests and reliability, Scheduling UI

@@ -9,6 +9,7 @@ from dateutil.tz import gettz
 from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
 from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
 from flaskdeadline.utils import deadline_data, linear_opt, startdate_data
+from dateutil.tz import gettz
 
 students = Blueprint('students',__name__)
 
@@ -16,9 +17,14 @@ students = Blueprint('students',__name__)
 @students.route('/index1')
 def index11():
     test = '1 OR 1'
-    user = Student.query.filter_by(id=test)
-    print(user)
-    print(user.first())
+    timezone_variable = gettz("Europe/London") 
+    cw = Coursework.query.filter_by(title = "Coursework 1").first()
+    f = datetime(2022, 5,5,12,0,0,0,timezone_variable)
+    print(f)
+    print(f.date())
+    
+    print(cw.start_date)
+    print(cw.start_date.date())
 
     return render_template('index1.html')
 
@@ -324,10 +330,6 @@ def intensity():
             start_end_dates.append(deadline.date.date())
         if len(ects_breakdown)!=5:
             ects_breakdown = ects_breakdown + [0]*(5-len(ects_breakdown))
-        start_end_dates =  [datetime(2022, 5, 20,20,0,0,0,timezone_variable).date(), datetime(2022,6,3,15,0,0,0,timezone_variable).date(),
-                datetime(2022, 5, 17,17,0,0,0,timezone_variable).date(), datetime(2022, 6, 3,15,0,0,0,timezone_variable).date(),
-                datetime(2022, 5, 15,15,0,0,0,timezone_variable).date(), datetime(2022, 6,3,15,0,0,0,timezone_variable).date()]
-        ects_breakdown = [75,100,150,0,0]
         print("STart end: ",start_end_dates)
         data,label = linear_opt(start_end_dates,ects_breakdown)
         print(ects_breakdown)
