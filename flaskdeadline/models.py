@@ -42,7 +42,7 @@ class Deadline(db.Model):
     vote = db.Column(db.String(10), nullable=False)
 
     def __repr__(self):
-        return f"Deadline('{self.student_id}', '{self.lecturer_id}', '{self.module}', '{self.module_id}','{self.coursework_id}', '{self.date}')"
+        return f"Deadline('{self.student_id}', '{self.lecturer_id}', '{self.module}', '{self.module_id}','{self.coursework_id}', '{self.date}','{self.vote}')"
 
 
 class Student(db.Model):
@@ -99,3 +99,16 @@ class Lecturer(db.Model):
 
     def __repr__(self):
         return f"Lecturer('{self.id}', '{self.name}')"
+
+class Reliable(db.Model):
+    coursework_title = db.Column(db.String(100), nullable=False, primary_key=True)
+    module_id = db.Column(db.String(9), db.ForeignKey("module.id"), nullable=False, primary_key=True)
+    lect = db.Column(db.Integer, nullable=False)
+    majority = db.Column(db.Integer, nullable=False)
+    vote = db.Column(db.Integer, nullable=False)
+    gta = db.Column(db.Integer, nullable=False)
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    __table_args__ = (db.UniqueConstraint(coursework_title, module_id),)
+
+    def __repr__(self):
+        return f"Reliable('{self.module_id}', '{self.coursework_title}', '{self.date}', '{self.vote}')"

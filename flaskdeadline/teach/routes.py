@@ -1,19 +1,10 @@
-from gettext import npgettext
-from sqlite3 import Date
-from xml.sax.xmlreader import AttributesImpl
-from flask import render_template, url_for, flash, redirect, request, session, make_response, Blueprint
+from flask import render_template, url_for, flash, redirect, session, Blueprint
 from flaskdeadline import db
-from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, ACCESS, VOTE
-from flaskdeadline.forms import ModuleForm, EditForm, DeadlineForm, FeedbackForm, ResponsibilityForm, StaffEditForm, BreakdownForm, GTAForm, OptimisationForm
+from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, ACCESS, Reliable
+from flaskdeadline.forms import DeadlineForm, ResponsibilityForm, StaffEditForm, BreakdownForm, GTAForm, OptimisationForm
 from sqlalchemy import update, func, and_
 from datetime import datetime
 from dateutil.tz import gettz
-from gekko import GEKKO
-import pandas as pd
-from numpy import cumsum
-from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
-from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
-import random
 import time
 from flaskdeadline.utils import deadline_data, linear_opt, startdate_data
 
@@ -147,7 +138,8 @@ def new_staff_mod():
         elif check_title:
             user.module_responsible.append(check_title)
         else:
-            module = Module(id = form.id.data, title = form.title.data, ects = form.ects.data)
+            module = Module(id = form.id.data, title = form.title.data, ects = form.ects.data, content = form.content.data)
+            db.session.add(module)
             user.module_responsible.append(module)
         check_cw = Coursework.query.filter_by(title = form.coursework_title.data, module_id = form.id.data).first()
         check_deadline = Deadline.query.filter_by(coursework_id = form.coursework_title.data, lecturer_id = user.id, module_id =form.id.data).first()
@@ -329,7 +321,7 @@ def staff_intensity():
         for i in cwk_list:
             mod = Module.query.filter_by(title=i[0]).first()
             cw = Coursework.query.filter_by(title=i[1],module_id = mod.id).first()
-            deadline = Deadline.query.filter_by(coursework_id=i[1], module_id = mod.id, vote = "Up").first()
+            deadline = Reliable.query.filter_by(coursework_title=i[1], module_id = mod.id).first()
             ects_breakdown.append(cw.breakdown*mod.ects)
             start_end_dates.append(cw.start_date.date())
             start_end_dates.append(deadline.date.date())

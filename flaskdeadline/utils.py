@@ -1,6 +1,6 @@
 
-from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, ACCESS, VOTE
-from flaskdeadline import app
+from flaskdeadline.models import Student, Module, Lecturer, Reliable, Deadline, Coursework, Hours, ACCESS, VOTE
+from flaskdeadline import app, db
 from datetime import datetime
 from dateutil.tz import gettz
 from gekko import GEKKO
@@ -92,8 +92,8 @@ def deadline_data(deadline_array, deadlines_voted):
     '''
     Aimed to extract the data in this form:
     {'Communication Networks': 
-        {'Coursework 1': [[datetime.datetime(2022, 6, 18, 12, 0), 2, 0, [1, False, True]], [datetime.datetime(2022, 6, 19, 12, 0), 1, 0, [0, False, True]]], 
-         'Coursework 2': [[datetime.datetime(2022, 6, 20, 12, 0), 0, 1, [0, False, False]]]}}
+        {'Coursework 1': [[datetime.datetime(2022, 6, 18, 12, 0), 2, 0, [1, False, True,False]], [datetime.datetime(2022, 6, 19, 12, 0), 1, 0, [0, False, True,False]]], 
+         'Coursework 2': [[datetime.datetime(2022, 6, 20, 12, 0), 0, 1, [0, False, False,False]]]}}
     Title of module as the key for a dict, and the output is another dict with the coursework title as the key
     The output of the nest dict is an array of array, with each element of the outer array being data corresponding to 1 deadline.
     Each element of the inner array is as follow:
@@ -102,12 +102,18 @@ def deadline_data(deadline_array, deadlines_voted):
     return_array = {}
     
     for element in deadline_array:
+        '''
+        deadline_array had this form:
+        ('Coursework 1', 'ELEC40005', datetime.datetime(2022, 6, 17, 3, 25), 1, 0, 1)
+        (Cw_title, Module_id, date, # of upvotes, # of downvotes, total # of votes)
+        '''
         mod = Module.query.filter_by(id=element[1]).first()
         modname = mod.title
         gta_array = mod.gta_responsible
         lect_responsible = mod.lecturer_responsible
         lect_deadline = []
         gta_deadline = []
+        reliability_count = 0
         if gta_array:
             for gta in gta_array:
                 gta_deadline.append(Deadline.query.filter_by(student_id=gta.id).all())
@@ -136,9 +142,12 @@ def deadline_data(deadline_array, deadlines_voted):
                         lect_count = lect_count + 1
             if lect_count > len(lect_deadline)/2:
                 lect_vote = True
+                reliability_count = reliability_count + 1
         data.append(lect_vote)
+        # Majority Vote
         if element[3] > element[5]/2:
             data.append(True)
+            reliability_count = reliability_count + 1
         else:
             data.append(False)
         # >50% of gta that voted must vote on same deadline
@@ -151,7 +160,32 @@ def deadline_data(deadline_array, deadlines_voted):
                         gta_count = gta_count +1
             if gta_count > len(gta_deadline)/2:
                 gta_vote = True
+                reliability_count = reliability_count + 1
         data.append(gta_vote)
+        current_rel = Reliable.query.filter_by(module_id = mod.id, coursework_title = element[0]).first()
+        if current_rel:
+            # If the date is currently the most reliable one
+            if current_rel.date.date() == element[2].date():
+                current_rel.lect = data[1]
+                current_rel.majority = data[2]
+                current_rel.gta = data[3]
+                current_rel.vote = element[3]
+                db.session.commit()
+            else:
+                indicator = current_rel.gta + current_rel.lect+ current_rel.majority
+                if (reliability_count == indicator and element[3] > current_rel.vote) or reliability_count > indicator:
+                    current_rel.date = element[2]
+                    current_rel.lect = data[1]
+                    current_rel.majority = data[2]
+                    current_rel.gta = data[3]
+                    current_rel.vote = element[3]
+                    db.session.commit()
+        else:
+            add_reliable = Reliable(coursework_title = element[0], module_id = mod.id, date = element[2],lect = data[1], majority = data[2], gta = data[3], vote = element[3])
+            db.session.add(add_reliable)
+            db.session.commit()
+        check_rel = Reliable.query.filter_by(module_id = mod.id, coursework_title = element[0]).first()     
+        print(check_rel)
         if modname in return_array:
             temp = return_array[modname]
             if element[0] in return_array[modname]:

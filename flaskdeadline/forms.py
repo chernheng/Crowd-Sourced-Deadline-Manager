@@ -27,6 +27,7 @@ class ResponsibilityForm(FlaskForm):
     breakdown = IntegerField('% of Module (Out of 100%)',default=20, validators=[DataRequired(),NumberRange(min=0,max=100)])
     start_date = DateTimeField('Start Date of Coursework',format='%Y-%m-%dT%H:%M',default=datetime.utcnow())
     date = DateTimeField('Deadline of Coursework',format='%Y-%m-%dT%H:%M', validators=[DataRequired(), DateRange(min=datetime.utcnow(), max=datetime(academic_yr, 7, 1))])
+    content = TextAreaField('Details of Module', validators=[DataRequired(), Length(max=1000)])
     submit = SubmitField('Add Module Responsibility')
 
 class DeadlineForm(FlaskForm):

@@ -81,12 +81,12 @@ def test_staff_page_post():
 
 def test_staff_feedback():
     with app.test_client() as test_client:
-        with test_client.session_transaction() as sess:
-            sess['samlUserdata'] = True
-            sess['id'] = 'cht119'
-            sess['name'] = 'Tan, Chern'
-            sess['email'] = 'chern.tan19@imperial.ac.uk'
-            sess['access'] = ACCESS['student']
-        response = test_client.get('/home')
+        with test_client.session_transaction() as session:
+            session['samlUserdata'] = True
+            session['id'] = 'jbarria'
+            session['name'] = 'Javier Barria'
+            session['email'] = 'j.barria@imperial.ac.uk'
+            session['access'] = ACCESS['staff']
+        response = test_client.get('/staff/feedback/Communication Networks/Coursework 1')
         assert response.status_code == 200
 

@@ -1,6 +1,6 @@
 
 from flaskdeadline import app, db
-from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, ACCESS, Hours
+from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, ACCESS, Hours, Reliable
 import datetime
 from dateutil.tz import gettz
 
@@ -68,7 +68,7 @@ def test_module():
         assert module.title == 'TESTING'
         assert module.ects == 34
         assert current_module.title == "TESTING_NAME"
-        current_module.name = "Control Engineering"
+        current_module.title = "Control Engineering"
         db.session.delete(module)
         db.session.commit()
 
@@ -166,8 +166,22 @@ def test_reliable():
             sess['name'] = 'Tan, Chern'
             sess['email'] = 'chern.tan19@imperial.ac.uk'
             sess['access'] = ACCESS['student']
-        response = test_client.get('/home')
-        assert response.status_code == 200
+        new_reliable = Reliable(coursework_title = "Coursework 2", module_id = "ELEC60005", date = datetime.datetime(2022, 1, 1,12,0,0,0,timezone_variable),lect = True, majority = True, gta = True, vote = 41)
+        current_reliable = Reliable.query.filter_by(coursework_title = "Coursework 1", module_id = "ELEC60005").first()
+        current_reliable.vote = 300
+        current_reliable.lect = False
+        db.session.add(new_reliable)
+        db.session.commit()
+        reliable = Reliable.query.filter_by(coursework_title = "Coursework 2", module_id = "ELEC60005").first()
+        
+        assert reliable.vote== 41
+        assert reliable.date.date() == datetime.datetime(2022, 1, 1,12,0,0,0,timezone_variable).date()
+        assert current_reliable.vote == 300
+        assert current_reliable.lect == False
+        current_reliable.vote = 1
+        current_reliable.lect = True
+        db.session.delete(reliable)
+        db.session.commit()
 
 def test_gta():
     with app.test_client() as test_client:
@@ -196,8 +210,7 @@ def test_deadline():
             sess['email'] = 'chern.tan19@imperial.ac.uk'
             sess['access'] = ACCESS['student']
         new_date = Deadline(coursework_id = 'TEST', student_id = 'cht119', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 1, 1,12,0,0,0,timezone_variable),vote="Down")
-        current_date = Deadline.query.filter_by(coursework_id = 'Coursework 1', student_id = 'cht119', module_id ='ELEC60006').first()
-        current_date.date = datetime.datetime(2022, 2,2,12,0,0,0,timezone_variable)
+        current_date = Deadline.query.filter_by(coursework_id = 'Coursework 1', student_id = 'cht119', module_id ='ELEC60006',vote= "Down").first()
         current_date.vote = "Up"
         db.session.add(new_date)
         db.session.commit()
@@ -205,9 +218,7 @@ def test_deadline():
         
         assert date.date.date() == datetime.datetime(2022, 1, 1,12,0,0,0,timezone_variable).date()
         assert date.vote == "Down"
-        assert current_date.date.date() == datetime.datetime(2022, 2,2,12,0,0,0,timezone_variable).date()
         assert current_date.vote == "Up"
-        current_date.date = datetime.datetime(2022, 6, 19,12,0,0,0,timezone_variable)
         current_date.vote = "Down"
         db.session.delete(date)
         db.session.commit()

@@ -1,4 +1,4 @@
-from flaskdeadline.models import db, Student, Module, Lecturer,Deadline, Coursework, Hours
+from flaskdeadline.models import db, Student, Module, Lecturer,Deadline, Coursework, Hours, Reliable
 import datetime
 from dateutil.tz import gettz
 
@@ -31,9 +31,10 @@ deadline_2 = Deadline(coursework_id = 'Coursework 1', student_id = 'ep2917', mod
 deadline_3 = Deadline(coursework_id = 'Coursework 1', student_id = 'cht119', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 6, 18,12,0,0,0,timezone_variable),vote="Up")
 deadline_4 = Deadline(coursework_id = 'Coursework 1', student_id = '', module_id ='ELEC60006',lecturer_id = 'jbarria', date = datetime.datetime(2022, 6, 18,12,0,0,0,timezone_variable),vote="Up")
 deadline_5 = Deadline(coursework_id = 'Coursework 1', student_id = 'cht119', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 6, 19,12,0,0,0,timezone_variable),vote="Down")
-deadline_5 = Deadline(coursework_id = 'Coursework 2', student_id = 'ep2917', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 6, 30,12,0,0,0,timezone_variable),vote="Down")
+deadline_6 = Deadline(coursework_id = 'Coursework 2', student_id = 'ep2917', module_id ='ELEC60006',lecturer_id = '', date = datetime.datetime(2022, 6, 30,12,0,0,0,timezone_variable),vote="Up")
 hour1 = Hours(module_id="ELEC60006", student_id="cht119",coursework_title="Coursework 1", hours="4", expected = 1)
+reliable_1 = Reliable(coursework_title = "Coursework 1", module_id = "ELEC60005", date = datetime.datetime(2022, 6, 17,12,0,0,0,timezone_variable),lect = True, majority = True, gta = True, vote = 1)
 hour2 = Hours(module_id="ELEC60006", student_id="ep2917",coursework_title="Coursework 1", hours="3", expected = 0)
 hour3 = Hours(module_id="ELEC60006", student_id="ep2917",coursework_title="Coursework 2", hours="10", expected =2)
-db.session.add_all([student_1,student_2,module_1,module_2, module_3,module_4,module_5, module_6,module_7,module_8, module_9,lecturer_1, lecturer_2,lecturer_3,admin,deadline_1,deadline_2,deadline_3,deadline_4, deadline_5,cw_1, cw_2,cw_3,hour1,hour2,hour3]) 
+db.session.add_all([reliable_1,student_1,student_2,module_1,module_2, module_3,module_4,module_5, module_6,module_7,module_8, module_9,lecturer_1, lecturer_2,lecturer_3,admin,deadline_1,deadline_2,deadline_3,deadline_4, deadline_5,deadline_6,cw_1, cw_2,cw_3,hour1,hour2,hour3]) 
 db.session.commit()

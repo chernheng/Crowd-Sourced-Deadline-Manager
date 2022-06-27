@@ -1,31 +1,25 @@
-from turtle import st
-from flask import render_template, url_for, flash, redirect, request, session, make_response, Blueprint
-from flaskdeadline import db, app
-from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, ACCESS
+from flask import render_template, url_for, flash, redirect, session, Blueprint
+from flaskdeadline import db
+from flaskdeadline.models import Student, Module, Deadline, Coursework, Hours, ACCESS, Reliable
 from flaskdeadline.forms import ModuleForm, EditForm, DeadlineForm, FeedbackForm, BreakdownForm, OptimisationForm
 from sqlalchemy import update, func, and_
 from datetime import datetime
 from dateutil.tz import gettz
-from flaskdeadline.onelogin.saml2.auth import OneLogin_Saml2_Auth
-from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
 from flaskdeadline.utils import deadline_data, linear_opt, startdate_data
-from dateutil.tz import gettz
 
 students = Blueprint('students',__name__)
 
-
+timezone_variable = gettz("Europe/London") 
 @students.route('/index1')
 def index11():
-    test = '1 OR 1'
-    timezone_variable = gettz("Europe/London") 
-    cw = Coursework.query.filter_by(title = "Coursework 1").first()
-    f = datetime(2022, 5,5,12,0,0,0,timezone_variable)
-    print(f)
-    print(f.date())
-    
-    print(cw.start_date)
-    print(cw.start_date.date())
-
+    current_date = Deadline.query.filter_by(coursework_id = 'Coursework 1', student_id = 'cht119', module_id ='ELEC60006',vote= "Down").first()
+    current_date.vote = "Up"
+    print(current_date)
+    db.session.commit()
+    check = Deadline.query.filter_by(coursework_id = 'Coursework 1', student_id = 'cht119', module_id ='ELEC60006',vote= "Up").all()
+    print(check)
+    check_date =  Deadline.query.filter_by(coursework_id = 'Coursework 1', student_id = 'cht119', module_id ='ELEC60006',date = datetime(2022, 6,19,12,0,0,0,timezone_variable)).first()
+    print(check_date)
     return render_template('index1.html')
 
 @students.route('/<string:module>/<string:cw>/<string:date>/up')
@@ -106,7 +100,7 @@ def feedback(module,cw):
         check_hours = Hours.query.filter_by(student_id = user.id, coursework_title = cw, module_id = mod.id).first()
         if check_hours:
             check_hours.hours = form.hours.data
-            check_hours.expectation = expectation
+            check_hours.expected = expectation
         else:
             new_hour = Hours(module_id=mod.id, student_id=user.id,coursework_title=cw, hours=form.hours.data, expected = expectation)
             db.session.add(new_hour)
@@ -322,7 +316,7 @@ def intensity():
         for i in cwk_list:
             mod = Module.query.filter_by(title=i[0]).first()
             cw = Coursework.query.filter_by(title=i[1],module_id = mod.id).first()
-            deadline = Deadline.query.filter_by(coursework_id=i[1], module_id = mod.id, vote = "Up").first()
+            deadline = Reliable.query.filter_by(coursework_title=i[1], module_id = mod.id).first()
             print(i)
             print(deadline)
             ects_breakdown.append(cw.breakdown*mod.ects)
