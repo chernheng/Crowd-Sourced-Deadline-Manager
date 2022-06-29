@@ -1,26 +1,18 @@
 from turtle import st
-from flask import render_template, url_for, flash, redirect, request, session, make_response, Blueprint
+from flask import render_template, url_for,flash, redirect, request, session, make_response, Blueprint
 from flaskdeadline import db, app
-from flaskdeadline.models import Student, Module, Lecturer, Deadline, Coursework, Hours, ACCESS
+from flaskdeadline.models import Student, Lecturer, ACCESS
 from flaskdeadline.onelogin.saml2.utils import OneLogin_Saml2_Utils
 from flaskdeadline.utils import init_saml_auth, prepare_flask_request
 
 main = Blueprint('main',__name__)
-@main.route('/index1')
-def index1():
 
-
-    return render_template("index1.html")
 
 @main.route('/login')
 def login():
     global user
     if session['samlNameId']:
         login_info = session['samlUserdata']
-        print(login_info['urn:oid:0.9.2342.19200300.100.1.1'][0]) # cht119
-        print(login_info['urn:oid:0.9.2342.19200300.100.1.3'][0]) # email
-        print(login_info['urn:oid:1.3.6.1.4.1.5923.1.1.1.1']) # [member,student]
-        print(login_info['urn:oid:2.5.4.4'][0] + ", " + login_info['urn:oid:2.5.4.42'][0])
         id = login_info['urn:oid:0.9.2342.19200300.100.1.1'][0]
         email = login_info['urn:oid:0.9.2342.19200300.100.1.3'][0]
         name = login_info['urn:oid:2.5.4.4'][0] + ", " + login_info['urn:oid:2.5.4.42'][0]
@@ -48,7 +40,7 @@ def login():
                 db.session.commit()
             
     else:
-        print("Not logged in")
+        flash('User Not Logged In!', 'danger')
         return redirect(url_for('main.landing'))
 
     return redirect(url_for('students.home'))

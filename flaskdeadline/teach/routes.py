@@ -35,6 +35,7 @@ def staff_upvote_deadline(module,cw,date):
             flash('User does not exist!', 'danger')
             return redirect(url_for('main.landing'))
     mod = Module.query.filter_by(title=module).first()
+    # Change Vote of deadline
     to_change = Deadline.query.filter_by(lecturer=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
         if to_change.vote == "Up":
@@ -61,6 +62,7 @@ def staff_downvote_deadline(module,cw,date):
             flash('User does not exist!', 'danger')
             return redirect(url_for('main.landing'))
     mod = Module.query.filter_by(title=module).first()
+    # Change Vote of deadline
     to_change = Deadline.query.filter_by(lecturer=user,module=mod,coursework_id=cw,date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')).first()
     if to_change:
         if to_change.vote == "Down":
