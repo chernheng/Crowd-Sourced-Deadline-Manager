@@ -46,27 +46,17 @@ class BreakdownForm(FlaskForm):
     start_date = DateTimeField('Start Date of Coursework',format='%Y-%m-%dT%H:%M',default=datetime.utcnow())
     submit = SubmitField('Edit Coursework Details')
 
-def avail_students():      
-    student = db.session.query(Student).all()
-    return sorted([m.id + " - " + m.name for m in student])
-
-def avail_cw():      
-    cw = db.session.query(Coursework).all()
-    choices = ['p']
-    choices.append("---")
-    return sorted(choices)
-
 class GTAForm(FlaskForm):
     title = StringField('Name of Module', render_kw={'readonly': True})
-    gta = SelectField('Select your GTA', choices=avail_students(), validators = [DataRequired()])
+    gta = SelectField('Select your GTA', validators = [DataRequired()])
     submit = SubmitField('Add GTA')
 
 class OptimisationForm(FlaskForm):
-    c1 = SelectField('Module 1', choices=avail_cw(), validators = [DataRequired()])
-    c2 = SelectField('Module 2', choices=avail_cw(), validators = [DataRequired()])
-    c3 = SelectField('Module 3', choices=avail_cw())
-    c4 = SelectField('Module 4', choices=avail_cw())
-    c5 = SelectField('Module 5', choices=avail_cw())
+    c1 = SelectField('Module 1', validators = [DataRequired()])
+    c2 = SelectField('Module 2', validators = [DataRequired()])
+    c3 = SelectField('Module 3')
+    c4 = SelectField('Module 4')
+    c5 = SelectField('Module 5')
     submit = SubmitField('Compare Modules')
 
 class EditForm(FlaskForm):

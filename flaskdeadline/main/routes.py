@@ -20,9 +20,11 @@ def login():
         session['id'] = id
         session['name'] = name
         session['email'] = email
+        # Specifying who has admin priviledges. Should create an Admin table if want to add more people
         if id == 'cht119' and email == 'chern.tan19@imperial.ac.uk':
             session['access'] = ACCESS['admin']
             return redirect(url_for('students.home'))
+        # Registering the user into the tables
         if 'staff' in membership:
             check_staff= Lecturer.query.filter_by(id =id, name = name, email = email).first()
             session['access'] = ACCESS['staff']
@@ -46,7 +48,7 @@ def login():
     return redirect(url_for('students.home'))
 
 
-
+# Landing page and SAML login
 @main.route('/', methods=['GET', 'POST'])
 def landing():
     req = prepare_flask_request(request)

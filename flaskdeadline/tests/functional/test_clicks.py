@@ -58,6 +58,25 @@ def test_vote_down():
             response = test_client.get("/Communication Networks/Coursework 1/2022-06-18 12:00:00/down")
             assert deadline.vote == "Down"
 
+def test_staff_subscribe():
+    with app.test_client() as test_client:
+        with test_client.session_transaction() as session:
+            session['samlUserdata'] = True
+            session['id'] = 'jbarria'
+            session['name'] = 'Javier Barria'
+            session['email'] = 'j.barria@imperial.ac.uk'
+            session['access'] = ACCESS['staff']
+        user = Lecturer.query.filter_by(id='jbarria').first()
+        mod = Module.query.filter_by(id="ELEC60010").first()
+        if mod in user.module_responsible:
+            response = test_client.get("/staff/subscribe/ELEC60010")
+            assert mod not in user.module_responsible
+        else:
+            response = test_client.get("/staff/subscribe/ELEC60010")
+            assert mod in user.module_responsible
+        
+        print(response.data)
+
 def test_staff_vote_up():
     with app.test_client() as test_client:
         with test_client.session_transaction() as session:

@@ -126,7 +126,16 @@
 {% block graph %}
 {% if label %}
     <h6>Graph below shows the Intensity of the workload per day. 100 means a student have to do a workload of 1 ECTS on that particular day.</h6>
-  <canvas class="my-4 w-100" id="myIDChart" width="900" height="380"></canvas>
+    {%for name in display%}
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-left pt-1 pb-1">
+        <h6>{{name}}</h6>
+        <div class="btn-toolbar px-1 mb-1 mb-md-0">
+          <h6> Start Date: {{display[name][0].strftime("%d/%m/%Y")}}, End Date: {{display[name][1].strftime("%d/%m/%Y")}}</h6>
+        </div>
+      </div>
+    {% endfor %}
+  
+    <canvas class="my-4 w-100" id="myIDChart" width="900" height="380"></canvas>
 {%endif%}
 <script>
 const ctx = document.getElementById('myIDChart')
@@ -137,20 +146,32 @@ const myChart = new Chart(ctx, {
     labels: {{label|safe}},
     datasets: [{
         data: {{date[1]|safe}},
-        label: "Coursework A",
+        label: "{{cwk[0]|safe}}",
         borderColor: "#3e95cd",
         fill: false
       },
       {
         data: {{date[2]|safe}},
-        label: "Coursework B",
+        label: "{{cwk[1]|safe}}",
         borderColor: "red",
         fill: false
       },
       {
         data: {{date[3]|safe}},
-        label: "Coursework C",
+        label: "{{cwk[2]|safe}}",
         borderColor: "green",
+        fill: false
+      },
+      {
+        data: {{date[4]|safe}},
+        label: "{{cwk[3]|safe}}",
+        borderColor: "yellow",
+        fill: false
+      },
+      {
+        data: {{date[5]|safe}},
+        label: "{{cwk[4]|safe}}",
+        borderColor: "cyan",
         fill: false
       },
       {

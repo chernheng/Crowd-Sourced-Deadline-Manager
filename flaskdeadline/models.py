@@ -13,6 +13,7 @@ VOTE = {
     'Down': 2
 }
 
+
 take = db.Table('take', 
     db.Column('student_id', db.String(32), db.ForeignKey('student.id'), primary_key=True),
     db.Column('module_id', db.String(9), db.ForeignKey('module.id'), primary_key=True)

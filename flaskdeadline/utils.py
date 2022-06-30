@@ -14,10 +14,12 @@ def linear_opt(start_end,ects_breakdown):
     timezone_variable = gettz("Europe/London") 
     m = GEKKO(remote=False)
 
+    # Number of modules
     n = int(len(start_end)/2)
-    print(n)
     no_intervals = len(start_end)-1
     sorted_dates = start_end.copy()
+
+    # Sorted the dates from earliest to latest, hence getting the itnervals
     sorted_dates.sort()
     interval_days = [0] * (no_intervals)
     exist = []
@@ -29,68 +31,68 @@ def linear_opt(start_end,ects_breakdown):
         for s in range(no_intervals):
             if start_end[t*2]<= sorted_dates[s] and sorted_dates[s+1] <= start_end[t*2+1] :
                 exist[t][s] = 1
+    # Creating variables for linear optimisation
     Z = m.Var()
-    print(interval_days)
-    intensity_val = m.Array(m.Var,(n,no_intervals))
+    intensity_val = m.Array(m.Var,(n,no_intervals)) # Dynamic creation of variables to schedule arbitrary number of modules
     for i in range(n):
         for j in range(no_intervals):
-                    intensity_val[i,j].lower = 0
+                    intensity_val[i,j].lower = 0 # set all variables to be positive
 
 
     m.Minimize(Z)
 
-    def test(exist,interval_days,ects_breakdown,intensity_val,n, no_intervals):
-        equation = []
-        for i in range(n):
-            result = 0
-            for j in range(no_intervals):
-                if exist[i][j] == 1:
-                    result = result + interval_days[j]*intensity_val[i][j]
-            equation.append(result == ects_breakdown[i])
-        return equation
+    equality_equations = []
+    for i in range(n):
+        result = 0
+        for j in range(no_intervals):
+            if exist[i][j] == 1:
+                result = result + interval_days[j]*intensity_val[i][j]
+        equality_equations.append(result == ects_breakdown[i])
 
-    m.Equations([test(exist,interval_days,ects_breakdown,intensity_val,n, no_intervals)])
+    m.Equations([equality_equations])
 
-    def test2(Z,exist,intensity_val,n, no_intervals):
-        equation = []
-        for i in range(no_intervals):
-            result = 0
-            for j in range(n):
-                if exist[j][i]:
-                    result = result + intensity_val[j][i]
-            equation.append(Z >=result)
-        return equation
+    inequality_equations = []
+    for i in range(no_intervals):
+        result = 0
+        for j in range(n):
+            if exist[j][i]:
+                result = result + intensity_val[j][i]
+        inequality_equations.append(Z >=result)
 
 
-    m.Equations([test2(Z,exist,intensity_val,n, no_intervals)])
-    m.solve(disp=True)
+    m.Equations([inequality_equations])
+    m.solve(disp=False)
     print('Solver Time: ', m.options.SOLVETIME)
-    print(intensity_val)
 
     # Creating data for graph
     date_range = pd.date_range(start=sorted_dates[0], end = sorted_dates[-1]).to_pydatetime().tolist()
     date_range = [i.strftime("%d/%m/%Y") for i in date_range]
-    range_index = cumsum(interval_days)
+
+    # putting intensity values into an array
     date_intensity = []
+    # if coursework does not exist in that interval, set it to 0
     for i in range(n):
         for j in range(no_intervals):
                     intensity_val[i][j].value[0]=intensity_val[i][j].value[0] * exist[i][j]
+        
     for i in intensity_val: # for each coursework
         temp = [i[0].value[0]]
         for j in range(no_intervals):
             for k in range(interval_days[j]):
                 temp.append(i[j].value[0])
         date_intensity.append(temp)
-    sum_interval = [0] * no_intervals
-    # for i in date_intensity:
-    #     sum_interval = [sum(x) for x in zip(*date_intensity)]
-    # date_intensity.insert(0,sum_interval)
+
+    # Sum up intensity values across all module for each interval
+    sum_interval = []
+    for i in date_intensity:
+        sum_interval = [sum(x) for x in zip(*date_intensity)]
+    date_intensity.insert(0,sum_interval)
 
     return (date_intensity,date_range)
 
 def deadline_data(deadline_array, deadlines_voted):
     '''
-    Aimed to extract the data in this form:
+    Aimed to extract the the deadlines and their votes in this form:
     {'Communication Networks': 
         {'Coursework 1': [[datetime.datetime(2022, 6, 18, 12, 0), 2, 0, [1, False, True,False]], [datetime.datetime(2022, 6, 19, 12, 0), 1, 0, [0, False, True,False]]], 
          'Coursework 2': [[datetime.datetime(2022, 6, 20, 12, 0), 0, 1, [0, False, False,False]]]}}
@@ -162,6 +164,7 @@ def deadline_data(deadline_array, deadlines_voted):
                 gta_vote = True
                 reliability_count = reliability_count + 1
         data.append(gta_vote)
+        # Adding/Updating the Reliable Table
         current_rel = Reliable.query.filter_by(module_id = mod.id, coursework_title = element[0]).first()
         if current_rel:
             # If the date is currently the most reliable one
@@ -183,9 +186,9 @@ def deadline_data(deadline_array, deadlines_voted):
         else:
             add_reliable = Reliable(coursework_title = element[0], module_id = mod.id, date = element[2],lect = data[1], majority = data[2], gta = data[3], vote = element[3])
             db.session.add(add_reliable)
-            db.session.commit()
-        check_rel = Reliable.query.filter_by(module_id = mod.id, coursework_title = element[0]).first()     
-        print(check_rel)
+            db.session.commit() 
+    
+        # putting all the data into a dict of dicts as the return array
         if modname in return_array:
             temp = return_array[modname]
             if element[0] in return_array[modname]:
@@ -201,14 +204,12 @@ def deadline_data(deadline_array, deadlines_voted):
 
 def startdate_data(deadline_array):
     '''
-    Aimed to extract the data in this form:
+    Aimed to extract the start dates of coursework in this form:
     {'Communication Networks': 
-        {'Coursework 1': [[datetime.datetime(2022, 6, 18, 12, 0), 2, 0, [1, False, True]], [datetime.datetime(2022, 6, 19, 12, 0), 1, 0, [0, False, True]]], 
-         'Coursework 2': [[datetime.datetime(2022, 6, 20, 12, 0), 0, 1, [0, False, False]]]}}
+        {'Coursework 1': datetime.datetime(2022, 6, 18, 12, 0), 
+         'Coursework 2': datetime.datetime(2022, 6, 20, 12, 0)}}
     Title of module as the key for a dict, and the output is another dict with the coursework title as the key
-    The output of the nest dict is an array of array, with each element of the outer array being data corresponding to 1 deadline.
-    Each element of the inner array is as follow:
-        [date, upvotes, downvotes, [What user voted for: 1 -> up, 2-> down, 0 -> neutral], Did Lect responsible vote?, Is this the majority?, Did GTA vote?]]
+    The output of the nest dict is the start date of the coursework
     '''
     return_array = {}
     
@@ -220,6 +221,8 @@ def startdate_data(deadline_array):
         else:
             return_array[modname] = {element[0]:element[2]}
     return return_array
+
+# Functions for SAML login
 
 def init_saml_auth(req):
     auth = OneLogin_Saml2_Auth(req, custom_base_path=app.config['SAML_PATH'])
