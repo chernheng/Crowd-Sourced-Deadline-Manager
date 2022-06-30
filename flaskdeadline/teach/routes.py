@@ -323,6 +323,7 @@ def staff_intensity():
     form.c4.choices = sorted(choices)
     form.c5.choices = sorted(choices)
     start_dates_dict = {}
+    start_end_dates =[]
     if form.validate_on_submit():
         cwk_list = []
         names = []
@@ -347,7 +348,6 @@ def staff_intensity():
             cwk_list.append((data[0],data[1]))
             names.append(form.c5.data)
         ects_breakdown = []
-        start_end_dates =[]
         for i in cwk_list:
             mod = Module.query.filter_by(title=i[0]).first()
             cw = Coursework.query.filter_by(title=i[1],module_id = mod.id).first()

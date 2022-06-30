@@ -286,6 +286,7 @@ def intensity():
     form.c4.choices = sorted(choices)
     form.c5.choices = sorted(choices)
     start_dates_dict = {}
+    start_end_dates =[]
     if form.validate_on_submit():
         cwk_list = []
         names = []
@@ -310,15 +311,14 @@ def intensity():
             cwk_list.append((data[0],data[1]))
             names.append(form.c5.data)
         ects_breakdown = []
-        start_end_dates =[]
         for i in cwk_list:
             mod = Module.query.filter_by(title=i[0]).first()
             cw = Coursework.query.filter_by(title=i[1],module_id = mod.id).first()
             deadline = Reliable.query.filter_by(coursework_title=i[1], module_id = mod.id).first()
-            start_dates_dict[i] = (cw.start_date.date(),deadline.date.date())
             ects_breakdown.append(cw.breakdown*mod.ects)
             start_end_dates.append(cw.start_date.date())
             start_end_dates.append(deadline.date.date())
+            start_dates_dict[i] = (cw.start_date.date(),deadline.date.date())
         if len(ects_breakdown)!=5:
             ects_breakdown = ects_breakdown + [0]*(5-len(ects_breakdown))
         data,label = linear_opt(start_end_dates,ects_breakdown)
