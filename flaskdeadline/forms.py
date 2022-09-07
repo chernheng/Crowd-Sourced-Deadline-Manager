@@ -1,13 +1,13 @@
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, DateTimeField, SelectField, IntegerField, DecimalField, TextAreaField
-from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange
+from wtforms import StringField, SubmitField, DateTimeField, SelectField, IntegerField, DecimalField, TextAreaField
+from wtforms.validators import DataRequired, Length, NumberRange
 from wtforms_components import DateRange
 from datetime import datetime
 from flaskdeadline.models import Student, Coursework
 from flaskdeadline import db
 
-academic_yr = 2022
+academic_yr = 2023
 
 class ModuleForm(FlaskForm):
     id = StringField('Module Code', validators=[DataRequired(), Length(min=9,max=9)])
